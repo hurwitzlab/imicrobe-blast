@@ -4,9 +4,15 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -t 02:00:00
-#SBATCH -p development
-#SBATCH -J imcrbmsh
+#SBATCH -p normal
+#SBATCH -J mublast
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --mail-user kyclark@email.arizona.edu
 
-run.sh -q "$WORK/pov/small/seqs.fa" -o "$SCRATCH/imicrobe-blast/pov"
+OUT_DIR="$SCRATCH/muscope-blast/test"
+
+if [[ -d $OUT_DIR ]]; then
+  rm -rf $OUT_DIR
+fi
+
+run.sh -q "$SCRATCH/muscope-blast/test.fa" -o $OUT_DIR
