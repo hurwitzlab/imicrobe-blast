@@ -10,9 +10,9 @@
     "deploymentSystem": "data.iplantcollaborative.org",
     "executionSystem": "tacc-stampede-kyclark",
     "executionType": "HPC",
-    "helpURI": "http://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x",
+    "helpURI": "",
     "label": "RefSeqBLAST",
-    "longDescription": "Use MinHash to compare samples to iMicrobe samples",
+    "longDescription": "Use BLAST to compare samples to iMicrobe samples",
     "modules": [],
     "name": "iMicrobe-BLAST",
     "ontology": ["http://sswapmeet.sswap.info/agave/apps/Application"],
@@ -23,7 +23,7 @@
     "testPath": "test.sh",
     "version": "0.0.1",
     "inputs": [{
-        "id": "QUERY_DIR",
+        "id": "QUERY",
         "value": {
             "default": "",
             "order": 0,
@@ -38,7 +38,7 @@
         },
         "details": {
             "description": "",
-            "label": "Directory of input files (FASTA, BAM)",
+            "label": "Input file/directory",
             "argument": "",
             "showArgument": true
         }
