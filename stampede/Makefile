@@ -2,7 +2,7 @@ APP = muscope-blast-0.0.2
 EMAIL = kyclark@email.arizona.edu
 
 clean:
-	find . \( -name \*.conf -o -name \*.out -o -name \*.log -o -name \*.param -o -name launcher-\* \) -exec rm {} \;
+	find . \( -name \*.out -o -name \*.param \) -exec rm {} \;
 
 upload: clean
 	files-upload -F $(WORK)/$(APP) kyclark/applications
@@ -17,7 +17,7 @@ job:
 	jobs-submit -F job.json
 
 scriptsgz:
-	(cd scripts && tar cvf ../bin.tgz *)
+	(cd scripts && tar cvf ../scripts.tgz *)
 
 jobs-template:
 	jobs-template $(APP) > job.json
