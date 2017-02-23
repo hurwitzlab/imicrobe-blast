@@ -1,0 +1,4 @@
+bin
+*.tgz
+*.out
+slurm-*
