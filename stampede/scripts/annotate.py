@@ -19,7 +19,7 @@ def main():
         print('--blast_dir "{}" is not a directory'.format(blast_dir))
         exit(1)
 
-    blast_hits = os.listdir(blast_dir)
+    blast_hits = filter(lambda x: x.endswith('.tab'), os.listdir(blast_dir))
 
     if len(blast_hits) < 1:
         print('Found no files in --blast_dir')
@@ -29,30 +29,29 @@ def main():
         print('--annot_db "{}" is not valid'.format(annot_db))
         exit(1)
 
+    out_dir = os.path.dirname(out_file)
+    if not os.path.isdir(out_dir):
+        os.mkdir(out_dir)
+
     db = sqlite3.connect(annot_db)
 
-    blast_fields = ['qseqid', 'sseqid', 'pident', 'length', 'mismatch',
-        'gapopen', 'qstart', 'qend', 'sstart', 'send', 'evalue', 'bitscore']
-    sample_fields = ['sample_id', 'sample_acc', 'sample_name', 'project_name']
-    sql = 'select ' + ', '.join(sample_fields) + ' from sample where sample_id=?'
+    #
+    # Find the field names (2nd in tuple returned by pragma)
+    #
+    cursor = db.execute('pragma table_info(sample)');
+    sample_fields = map(lambda x: x[1], cursor.fetchall()) 
+    sql = 'select * from sample where sample_id=?'
 
-    # print headers for output
-    out_fh   = open(out_file, 'wt')
-    out_fh.write('\t'.join(['qseqid', 'sample'] + sample_fields) + '\n')
-
-    def err(msg):
-        if args.verbose:
-            sys.stderr.write(msg + '\n')
+    #
+    # Print headers for output
+    #
+    out_fh = open(out_file, 'wt')
+    out_fh.write('\t'.join(sample_fields) + '\n')
 
     for blast_out in blast_hits:
-        match = re.match('.+-(\d+)\.tab$', blast_out)
-        if not match:
-            err('Failed to extract sample_id from blast-out "{}"'.format(blast_out))
-            continue
-
-        sample_id = match.group(1)
+        sample_id, ext = os.path.splitext(blast_out)
         for row in db.execute(sql, (sample_id,)):
-            out_fh.write('\t'.join([blast_out] + list(map(str,row))) + '\n')
+            out_fh.write('\t'.join(list(map(str,row))) + '\n')
 
     out_fh.close()
     print('Done, see output file "{}"'.format(out_file))

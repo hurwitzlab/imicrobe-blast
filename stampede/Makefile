@@ -1,11 +1,14 @@
-APP = muscope-blast-0.0.2
+APP = imicrobe-blast-0.0.1
 EMAIL = kyclark@email.arizona.edu
 
 clean:
 	find . \( -name \*.out -o -name \*.param \) -exec rm {} \;
 
-upload: clean
+upload: clean scriptsgz rmbin
 	files-upload -F $(WORK)/$(APP) kyclark/applications
+
+rmbin:
+	rm -rf bin
 
 update:
 	apps-addupdate -F app.json
