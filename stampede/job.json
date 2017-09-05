@@ -1,0 +1,10 @@
+{
+  "name": "imblast",
+  "appId": "iMicrobe-BLAST-0.0.1",
+  "archive": true,
+  "inputs": {
+    "QUERY": "agave://data.iplantcollaborative.org/kyclark/data/imicrobe-blast/test.fa"
+  },
+  "parameter": {
+  }
+}

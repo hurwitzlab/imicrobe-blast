@@ -10,7 +10,7 @@ upload: clean scriptsgz rmbin
 rmbin:
 	rm -rf bin
 
-update:
+app:
 	apps-addupdate -F app.json
 
 test: clean
