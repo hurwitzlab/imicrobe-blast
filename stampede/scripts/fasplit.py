@@ -17,7 +17,7 @@ def main():
         exit(1)
 
     if not os.path.isdir(out_dir):
-        os.mkdir(out_dir)
+        os.makedirs(out_dir)
 
     if max_per < 1:
         print("--num cannot be less than one")
