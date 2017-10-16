@@ -62,7 +62,7 @@ def get_args():
         type=str, metavar='DIR', required=True)
     parser.add_argument('-a', '--annot_db', help='Annotation database',
         type=str, metavar='FILE',
-        default='/work/03137/kyclark/imicrobe/annotations/')
+        default='/work/05066/imicrobe/iplantc.org/data/blast/annotations/')
     parser.add_argument('-o', '--out_file', help='Output file',
         type=str, metavar='DIR', default='blast-annotated')
     parser.add_argument('-v', '--verbose', help='Say more stuff',

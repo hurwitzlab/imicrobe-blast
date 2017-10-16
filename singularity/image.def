@@ -1,0 +1,28 @@
+BootStrap: docker
+From: ubuntu:latest
+
+%environment
+    PATH=/app/imicrobe-blast/scripts:$PATH
+
+%runscript
+    exec blastn "$@"
+
+%post
+    apt-get update
+    apt-get install -y git locales ncbi-blast+ python3 python3-pip
+    locale-gen en_US.UTF-8
+
+    #
+    # Put everything into $APP_DIR
+    #
+    export APP_DIR=/app
+    mkdir -p $APP_DIR
+    cd $APP_DIR
+
+    git clone https://github.com/hurwitzlab/imicrobe-blast.git
+    python3 -m pip install --upgrade pip
+    python3 -m pip install biopython
+
+    mkdir /home1
+    mkdir /work
+    mkdir /scratch
