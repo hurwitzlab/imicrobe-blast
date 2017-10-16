@@ -1,4 +1,5 @@
 bin
 *.tgz
 *.out
+*.param
 slurm-*
