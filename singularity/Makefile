@@ -1,7 +1,7 @@
 APP = imicrobe-blast
 SINGULARITY = /usr/local/bin/singularity
 SIZE = 1024
-VERSION = 0.0.1
+VERSION = 0.0.3
 IMAGE_NAME = $(APP)-$(VERSION).img
 
 img:
