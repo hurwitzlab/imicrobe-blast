@@ -1,6 +1,7 @@
 bin
 *.tgz
 *.out
+*.param
 slurm-*
 *.param
 MANIFEST
