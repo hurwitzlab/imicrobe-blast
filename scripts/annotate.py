@@ -34,7 +34,7 @@ def main():
         print('--blast_dir "{}" is not a directory'.format(blast_dir))
         exit(1)
 
-    blast_hits = filter(lambda x: x.endswith('.tab'), os.listdir(blast_dir))
+    blast_hits = list(filter(lambda x: x.endswith('.tab'), os.listdir(blast_dir)))
 
     if len(blast_hits) < 1:
         print('Found no files in --blast_dir')
