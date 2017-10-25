@@ -45,6 +45,24 @@
             "showArgument": true
         }
     }],
-    "parameters": [],
+    "parameters": [
+      {
+        "id": "PCT_ID",
+        "value": {
+            "type": "string",
+            "default": "0.98",
+            "order": 1,
+            "required": false,
+            "validator": "",
+            "visible": true
+        },
+        "details": {
+            "description": "Percent identity",
+            "label": "Percent identity",
+            "argument": "-p ",
+            "showArgument": true
+        }
+      }
+    ],
     "outputs": []
 }
