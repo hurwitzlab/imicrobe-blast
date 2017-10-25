@@ -11,8 +11,6 @@
 
 OUT_DIR="$SCRATCH/imicrobe-blast/test"
 
-if [[ -d $OUT_DIR ]]; then
-  rm -rf $OUT_DIR
-fi
+[[ -d "$OUT_DIR" ]] && rm -rf "$OUT_DIR"
 
-run.sh -q "$SCRATCH/imicrobe-blast/test.fa" -o $OUT_DIR
+run.sh -q "$WORK/data/blast/test1.fa" -q "$WORK/data/blast/test2.fa" -o $OUT_DIR

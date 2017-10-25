@@ -1,14 +1,11 @@
-APP = imicrobe-blast-0.0.1
+APP = imicrobe-blast-0.0.2
 EMAIL = kyclark@email.arizona.edu
 
 clean:
 	find . \( -name \*.out -o -name \*.param \) -exec rm {} \;
 
-upload: clean scriptsgz rmbin
-	files-upload -F $(WORK)/$(APP) kyclark/applications
-
-rmbin:
-	rm -rf bin
+up: 
+	copy-from-manifest.pl6 $(WORK)/$(APP)
 
 app:
 	apps-addupdate -F app.json
@@ -19,11 +16,5 @@ test: clean
 job:
 	jobs-submit -F job.json
 
-scriptsgz:
-	(cd scripts && tar cvf ../scripts.tgz *)
-
-jobs-template:
+template:
 	jobs-template $(APP) > job.json
-
-jobs-submit:
-	jobs-submit -F job.json

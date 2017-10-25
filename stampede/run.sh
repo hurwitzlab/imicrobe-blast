@@ -1,23 +1,20 @@
-bin/bash
+#!/bin/bash
 
 # Author: Ken Youens-Clark <kyclark@email.arizona.edu>
 
 set -u
 
-BIN=$( cd "$( dirname "$0" )" && pwd )
 QUERY=""
 PCT_ID=".98"
-OUT_DIR="$BIN"
+OUT_DIR="$PWD/blast-out"
 NUM_THREADS=12
-MAX_SEQS_PER_FILE=25
-
-BASE_DIR="/work/05066/imicrobe/iplantc.org/data/imicrobe"
-BLAST_DIR="$BASE_DIR/blast"
-ANNOT_DB="$BASE_DIR/imicrobe/annotations/annots.db"
+MAX_SEQS_PER_FILE=1000
+IMG="imicrobe-blast-0.0.1.img"
+BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/dbs"
+ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
+BLAST_DB_LIST=""
 
 export LAUNCHER_DIR="$HOME/src/launcher"
-#export LAUNCHER_NHOSTS=4
-#export LAUNCHER_PPN=4
 export LAUNCHER_PLUGIN_DIR="$LAUNCHER_DIR/plugins"
 export LAUNCHER_WORKDIR="$PWD"
 export LAUNCHER_RMI=SLURM
@@ -42,6 +39,7 @@ function HELP() {
   echo " -p PCT_ID ($PCT_ID)"
   echo " -o OUT_DIR ($OUT_DIR)"
   echo " -n NUM_THREADS ($NUM_THREADS)"
+  echo " -b BLAST_DB_LIST"
   echo 
   exit 0
 }
@@ -50,10 +48,13 @@ if [[ $# -eq 0 ]]; then
   HELP
 fi
 
-while getopts :o:n:p:q:h OPT; do
+while getopts :b:o:n:p:q:h OPT; do
   case $OPT in
     h)
       HELP
+      ;;
+    b)
+      BLAST_DB_LIST="$OPTARG"
       ;;
     n)
       NUM_THREADS="$OPTARG"
@@ -65,7 +66,7 @@ while getopts :o:n:p:q:h OPT; do
       PCT_ID="$OPTARG"
       ;;
     q)
-      QUERY="$OPTARG"
+      QUERY="$QUERY $OPTARG"
       ;;
     :)
       echo "Error: Option -$OPTARG requires an argument."
@@ -77,11 +78,8 @@ while getopts :o:n:p:q:h OPT; do
   esac
 done
 
-[[ -e "$BIN/bin" ]] && PATH="$BIN/bin:$PATH"
-export PATH
-
-if [[ ! -d "$BLAST_DIR" ]]; then
-    echo "BLAST_DIR \"$BLAST_DIR\" does not exist."
+if [[ ! -d "$BLAST_DB_DIR" ]]; then
+    echo "BLAST_DB_DIR \"$BLAST_DB_DIR\" does not exist."
     exit 1
 fi
 
@@ -96,33 +94,42 @@ BLAST_OUT_DIR="$OUT_DIR/blast-out"
 [[ ! -d "$BLAST_OUT_DIR" ]] && mkdir -p "$BLAST_OUT_DIR"
 
 INPUT_FILES=$(mktemp)
-if [[ -d "$QUERY" ]]; then
-    find "$QUERY" -type f > "$INPUT_FILES"
-else
-    echo "$QUERY" > "$INPUT_FILES"
-fi
+for QRY in $QUERY; do
+    if [[ -d "$QRY" ]]; then
+        find "$QRY" -type f > "$INPUT_FILES"
+    elif [[ -f "$QRY" ]]; then
+        echo "$QRY" > "$INPUT_FILES"
+    else
+        echo "$QRY neither file nor directory"
+    fi
+done
+
 NUM_INPUT=$(lc "$INPUT_FILES")
 
 if [[ $NUM_INPUT -lt 1 ]]; then
     echo "No input files found"
     exit 1
+else
+    echo "Found $NUM_INPUT input files"
 fi
 
 #
 # Split the input files
 #
 SPLIT_DIR="$OUT_DIR/split"
+echo "SPLIT_DIR \"$SPLIT_DIR\""
 [[ ! -d "$SPLIT_DIR" ]] && mkdir -p "$SPLIT_DIR"
 
 SPLIT_PARAM="$$.split.param"
 while read -r FILE; do
     BASENAME=$(basename "$FILE")
-    echo "fasplit.py -f $FILE -o $SPLIT_DIR/$BASENAME -n $MAX_SEQS_PER_FILE" >> "$SPLIT_PARAM"
+    echo "singularity exec $IMG fasplit.py -f $FILE -o $SPLIT_DIR/$BASENAME -n $MAX_SEQS_PER_FILE" >> "$SPLIT_PARAM"
 done < "$INPUT_FILES"
 
 NUM_SPLIT=$(lc "$SPLIT_PARAM")
 echo "Starting launcher NUM_SPLIT \"$NUM_SPLIT\" for split"
-export LAUNCHER_JOB_FILE="$SPLIT_PARAM"
+LAUNCHER_JOB_FILE="$SPLIT_PARAM"
+export LAUNCHER_JOB_FILE
 paramrun
 echo "Ended launcher for split"
 
@@ -132,15 +139,39 @@ NUM_SPLIT=$(lc "$SPLIT_FILES")
 
 echo "After splitting, there are NUM_SPLIT \"$NUM_SPLIT\""
 
+if [[ "$NUM_SPLIT" -lt 1 ]]; then
+    echo "Something went wrong with splitting."
+    exit 1
+fi
+
 # 
 # Run BLAST
 #
 BLAST_ARGS="-outfmt 6 -num_threads $NUM_THREADS"
 BLAST_PARAM="$$.blast.param"
 cat /dev/null > "$BLAST_PARAM" 
-BLAST_DBS=$(mktemp)
+#BLAST_DBS=$(mktemp)
+BLAST_DBS='blast-dbs'
 
-find "$BLAST_DIR" -type f -size +0c | sed "s/\..*//" | sort | uniq > "$BLAST_DBS"
+if [[ -z "$BLAST_DB_LIST" ]] && [[ -f "$BLAST_DB_LIST" ]]; then
+    TMP=$(mktemp)
+    while read -r DB_NAME; do
+        echo "Looking for DB_NAME \"$DB_NAME\""
+        find "$BLAST_DB_DIR" -name $DB_NAME\\* -type f -size +0c >> "$TMP"
+    done < "$BLAST_DB_LIST"
+    sed "s/\..*//" "$TMP" | sort | uniq > "$BLAST_DBS"
+    rm "$TMP"
+else
+    find "$BLAST_DB_DIR" -type f -size +0c | perl -pe "s/\.\w+$//d" | sort | uniq > "$BLAST_DBS"
+fi
+
+NUM_BLAST=$(lc "$BLAST_DBS")
+echo "Found NUM_BLAST \"$NUM_BLAST\" dbs"
+
+if [[ $NUM_BLAST -lt 1 ]]; then
+    echo "Cannot continue without BLAST dbs"
+    exit 1
+fi
 
 i=0
 while read -r INPUT_FILE; do
@@ -185,7 +216,7 @@ while read -r INPUT_FILE; do
       
             [[ ! -e "$DB_DIR" ]] && mkdir -p "$DB_DIR"
       
-            echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DIR/$BASE_DB\" -query \"$INPUT_FILE\" -out \"${DB_DIR}/${BASENAME}\"" >> $BLAST_PARAM
+            echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$DB\" -query \"$INPUT_FILE\" -out \"${DB_DIR}/${BASENAME}\"" >> "$BLAST_PARAM"
         done < "$BLAST_DBS"
     fi
 
@@ -211,13 +242,15 @@ LAUNCHER_JOB_FILE="$BLAST_PARAM"
 export LAUNCHER_JOB_FILE
 paramrun
 echo "Ended launcher for BLAST"
-rm $BLAST_PARAM
+rm "$BLAST_PARAM"
 
 #
 # Remove the empty files, directories
 #
 find "$BLAST_OUT_DIR" -type f -size 0 -exec rm {} \;
 find "$BLAST_OUT_DIR" -type d -empty -exec rmdir {} \;
+
+exit
 
 #
 # Rollup the 1/2/... files into one
@@ -244,17 +277,15 @@ while read -r SAMPLE_DIR; do
     rm "$DB_DIRS"
 
     SAMPLE_NAME=$(basename "$SAMPLE_DIR")
-    echo "annotate.py -b $SAMPLE_DIR -a $ANNOT_DB -o $OUT_DIR/annotations/$SAMPLE_NAME" >> "$ANNOT_PARAM"
+    echo "singularity exec $IMG annotate.py -b $SAMPLE_DIR -a $ANNOT_DB -o $OUT_DIR/annotations/$SAMPLE_NAME" >> "$ANNOT_PARAM"
 done < "$SAMPLE_DIRS"
 
 rm "$SAMPLE_DIRS"
 
 NUM_JOBS=$(lc "$ANNOT_PARAM")
-echo "Starting for annotation"
-export LAUNCHER_NHOSTS=1
-#export LAUNCHER_NJOBS=$(lc $ANNOT_PARAM)
-#export LAUNCHER_JOB_FILE=$ANNOT_PARAM
-#export LAUNCHER_PPN=4
+echo "Starting launcher for annotation"
+LAUNCHER_JOB_FILE="$ANNOT_PARAM"
+export LAUNCHER_JOB_FILE
 paramrun
 echo "Ended launcher for annotation"
 

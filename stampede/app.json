@@ -6,22 +6,22 @@
     "defaultMaxRunTime": "12:00:00",
     "defaultNodeCount": 1,
     "defaultQueue": "serial",
-    "deploymentPath": "kyclark/applications/imicrobe-blast-0.0.1/stampede",
+    "deploymentPath": "kyclark/applications/imicrobe-blast-0.0.3/stampede",
     "deploymentSystem": "data.iplantcollaborative.org",
     "executionSystem": "tacc-stampede-kyclark",
     "executionType": "HPC",
     "helpURI": "",
-    "label": "RefSeqBLAST",
+    "label": "iMicrobe BLAST",
     "longDescription": "Use BLAST to compare samples to iMicrobe samples",
     "modules": [],
     "name": "imicrobe-blast",
     "ontology": ["http://sswapmeet.sswap.info/agave/apps/Application"],
     "parallelism": "SERIAL",
     "shortDescription": "iMicrobe-BLAST",
-    "tags": ["imicrobe","identification","metagenome"],
+    "tags": ["imicrobe","identification"],
     "templatePath": "template.sh",
     "testPath": "test.sh",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "inputs": [{
         "id": "QUERY",
         "value": {
@@ -34,12 +34,14 @@
         "semantics": {
             "ontology": ["http://sswapmeet.sswap.info/mime/application/X-bam"],
             "minCardinality": 1,
+            "maxCardinality": -1,
             "fileTypes": ["raw-0"]
         },
         "details": {
-            "description": "",
-            "label": "Input file/directory",
-            "argument": "",
+            "description": "Input",
+            "label": "Input files/directories",
+            "argument": "-q ",
+            "repeatArgument": true,
             "showArgument": true
         }
     }],

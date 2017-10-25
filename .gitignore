@@ -2,3 +2,8 @@ bin
 *.tgz
 *.out
 slurm-*
+*.param
+MANIFEST
+*.json
+*.img
+*.swp
