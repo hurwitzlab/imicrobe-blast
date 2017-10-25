@@ -8,6 +8,21 @@ import re
 import sqlite3
 import sys
 
+# --------------------------------------------------
+def get_args():
+    parser = argparse.ArgumentParser(description='Annotate BLAST for iMicrobe')
+    parser.add_argument('-b', '--blast_dir', help='BLAST out directory',
+        type=str, metavar='DIR', required=True)
+    parser.add_argument('-a', '--annot_db', help='Annotation database',
+        type=str, metavar='FILE',
+        default='/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db')
+    parser.add_argument('-o', '--out_file', help='Output file',
+        type=str, metavar='DIR', default='blast-annotations.tab')
+    parser.add_argument('-v', '--verbose', help='Say more stuff',
+        action='store_true')
+    return parser.parse_args()
+
+# --------------------------------------------------
 def main():
     args      = get_args()
     out_file  = args.out_file
@@ -56,18 +71,6 @@ def main():
     out_fh.close()
     print('Done, see output file "{}"'.format(out_file))
 
-def get_args():
-    parser = argparse.ArgumentParser(description='Annotate BLAST for iMicrobe')
-    parser.add_argument('-b', '--blast_dir', help='BLAST out directory',
-        type=str, metavar='DIR', required=True)
-    parser.add_argument('-a', '--annot_db', help='Annotation database',
-        type=str, metavar='FILE',
-        default='/work/05066/imicrobe/iplantc.org/data/blast/annotations/')
-    parser.add_argument('-o', '--out_file', help='Output file',
-        type=str, metavar='DIR', default='blast-annotated')
-    parser.add_argument('-v', '--verbose', help='Say more stuff',
-        action='store_true')
-    return parser.parse_args()
-
+# --------------------------------------------------
 if __name__ == '__main__':
     main()

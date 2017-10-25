@@ -211,7 +211,7 @@ while read -r INPUT_FILE; do
   
     if [[ ${#BLAST_TO_DNA} -gt 0 ]]; then
         while read -r DB; do
-            BASE_DB=$(basename "$DB")
+            BASE_DB=$(basename $(dirname "$DB")) # use the sample id
             DB_DIR="${SAMPLE_DIR}/${BASE_DB}"
       
             [[ ! -e "$DB_DIR" ]] && mkdir -p "$DB_DIR"
@@ -250,8 +250,6 @@ rm "$BLAST_PARAM"
 find "$BLAST_OUT_DIR" -type f -size 0 -exec rm {} \;
 find "$BLAST_OUT_DIR" -type d -empty -exec rmdir {} \;
 
-exit
-
 #
 # Rollup the 1/2/... files into one
 # Add annotations
@@ -277,17 +275,16 @@ while read -r SAMPLE_DIR; do
     rm "$DB_DIRS"
 
     SAMPLE_NAME=$(basename "$SAMPLE_DIR")
-    echo "singularity exec $IMG annotate.py -b $SAMPLE_DIR -a $ANNOT_DB -o $OUT_DIR/annotations/$SAMPLE_NAME" >> "$ANNOT_PARAM"
 done < "$SAMPLE_DIRS"
-
 rm "$SAMPLE_DIRS"
 
-NUM_JOBS=$(lc "$ANNOT_PARAM")
-echo "Starting launcher for annotation"
-LAUNCHER_JOB_FILE="$ANNOT_PARAM"
-export LAUNCHER_JOB_FILE
-paramrun
-echo "Ended launcher for annotation"
+#
+# Annotate the output
+#
+singularity exec $IMG annotate.py -b "$BLAST_OUT_DIR" -a "$ANNOT_DB" -o "$OUT_DIR/annotations.tab"
 
 rm -rf "$SPLIT_DIR"
 rm "$ANNOT_PARAM"
+
+echo "Done."
+echo "Comments to Ken Youens-Clark kyclark@email.arizona.edu"
