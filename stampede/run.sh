@@ -96,9 +96,9 @@ BLAST_OUT_DIR="$OUT_DIR/blast-out"
 INPUT_FILES=$(mktemp)
 for QRY in $QUERY; do
     if [[ -d "$QRY" ]]; then
-        find "$QRY" -type f > "$INPUT_FILES"
+        find "$QRY" -type f >> "$INPUT_FILES"
     elif [[ -f "$QRY" ]]; then
-        echo "$QRY" > "$INPUT_FILES"
+        echo "$QRY" >> "$INPUT_FILES"
     else
         echo "$QRY neither file nor directory"
     fi
@@ -174,50 +174,50 @@ if [[ $NUM_BLAST -lt 1 ]]; then
 fi
 
 i=0
-while read -r INPUT_FILE; do
-    SAMPLE_NAME=$(basename "$(dirname "$INPUT_FILE")")
-    BASENAME=$(basename "$INPUT_FILE")
-    SAMPLE_DIR="${BLAST_OUT_DIR}/${SAMPLE_NAME}"
+while read -r SPLIT_FILE; do
+    SPLIT_NAME=$(basename "$SPLIT_FILE")
+    QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
+    QUERY_OUT_DIR="$BLAST_OUT_DIR/$QUERY_NAME"
   
-    echo "SAMPLE_DIR \"$SAMPLE_DIR\""
-  
-    [[ ! -e "$SAMPLE_DIR" ]] && mkdir -p "$SAMPLE_DIR"
+    [[ ! -e "$QUERY_OUT_DIR" ]] && mkdir -p "$QUERY_OUT_DIR"
+    echo "QUERY_OUT_DIR \"$QUERY_OUT_DIR\""
   
     let i++
-    printf "%3d: %s\n" "$i" "$BASENAME"
-    EXT="${BASENAME##*.}"
+    printf "%5d: QUERY %s\n" "$i" "$SPLIT_NAME"
+    EXT="${QUERY_NAME##*.}"
     TYPE="unknown"
-    if [[ $EXT == 'fa'    ]] || \
-       [[ $EXT == 'fna'   ]] || \
-       [[ $EXT == 'fas'   ]] || \
-       [[ $EXT == 'fasta' ]] || \
-       [[ $EXT == 'ffn'   ]];
+    if [[ $EXT == "fa"    ]] || \
+       [[ $EXT == "fna"   ]] || \
+       [[ $EXT == "fas"   ]] || \
+       [[ $EXT == "fasta" ]] || \
+       [[ $EXT == "ffn"   ]];
     then
         TYPE="dna"
-    elif [[ $EXT == 'faa' ]]; then
+    elif [[ $EXT == "faa" ]]; then
         TYPE="prot"
-    elif [[ $EXT == 'fra' ]]; then
+    elif [[ $EXT == "fra" ]]; then
         TYPE="rna"
     fi
   
     BLAST_TO_DNA=""
-    if [[ $TYPE == 'dna' ]]; then 
-        BLAST_TO_DNA='blastn'
-    elif [[ $TYPE == 'prot' ]]; then
-        BLAST_TO_DNA='tblastn'
+    if [[ $TYPE == "dna" ]]; then 
+        BLAST_TO_DNA="blastn"
+    elif [[ $TYPE == "prot" ]]; then
+        BLAST_TO_DNA="tblastn"
     else
-        echo "Cannot BLAST $BASENAME to DNA (not DNA or prot)"
+        echo "Cannot BLAST \"$QUERY_NAME\" to DNA (not DNA or prot)"
     fi
   
     if [[ ${#BLAST_TO_DNA} -gt 0 ]]; then
-        while read -r DB; do
-            SAMPLE_ID=$(basename $(dirname "$DB")) 
-            BASE_DB=$(basename "$DB") 
-            DB_DIR="$SAMPLE_DIR/$SAMPLE_ID"
+        i=0
+        while read -r BLAST_DB; do
+            SAMPLE_ID=$(basename $(dirname "$BLAST_DB")) 
+            SAMPLE_NAME=$(basename "$BLAST_DB") 
+            HITS_DIR="$QUERY_OUT_DIR/$SAMPLE_ID"
       
-            [[ ! -e "$DB_DIR" ]] && mkdir -p "$DB_DIR"
+            [[ ! -e "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
       
-            echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$DB\" -query \"$INPUT_FILE\" -out \"${DB_DIR}/${BASE_DB}-${BASENAME}\"" >> "$BLAST_PARAM"
+            echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SAMPLE_NAME-$SPLIT_NAME\"" >> "$BLAST_PARAM"
         done < "$BLAST_DBS"
     fi
 
@@ -231,7 +231,7 @@ while read -r INPUT_FILE; do
 #  fi
 #
 #  if [[ ${#BLAST_TO_PROT} -gt 0 ]]; then
-#    echo "$BLAST_TO_PROT $BLAST_ARGS -db $BLAST_DIR/proteins -query $INPUT_FILE -out $BLAST_OUT_DIR/$BASENAME-proteins.tab" >> $BLAST_PARAM
+#    echo "$BLAST_TO_PROT $BLAST_ARGS -db $BLAST_DIR/proteins -query $QUERY_FILE -out $BLAST_OUT_DIR/$BASENAME-proteins.tab" >> $BLAST_PARAM
 #  fi
 done < "$SPLIT_FILES"
 rm "$SPLIT_FILES"
@@ -248,44 +248,60 @@ rm "$BLAST_PARAM"
 #
 # Remove the empty files, directories
 #
-find "$BLAST_OUT_DIR" -type f -size 0 -exec rm {} \;
-find "$BLAST_OUT_DIR" -type d -empty -exec rmdir {} \;
+echo "Removing empty files/dirs from BLAST_OUT_DIR \"$BLAST_OUT_DIR\""
+find "$BLAST_OUT_DIR" -type f -size 0 -exec rm {} \; 2>/dev/null
+find "$BLAST_OUT_DIR" -type d -empty -exec rmdir {} \; 2>/dev/null
 
 #
 # Rollup the 1/2/... files into one
 # Add annotations
 #
-SAMPLE_DIRS=$(mktemp)
-find "$BLAST_OUT_DIR" -maxdepth 1 -mindepth 1 -type d > "$SAMPLE_DIRS"
+QUERY_DIRS=$(mktemp)
+find "$BLAST_OUT_DIR" -maxdepth 1 -mindepth 1 -type d > "$QUERY_DIRS"
+
 ANNOT_PARAM="$$.annot.param"
 cat /dev/null > "$ANNOT_PARAM"
 
-while read -r SAMPLE_DIR; do
-    echo "SAMPLE_DIR $SAMPLE_DIR"
-    DB_DIRS=$(mktemp)
-    find "$SAMPLE_DIR" -maxdepth 1 -mindepth 1 -type d > "$DB_DIRS"
+i=0
+while read -r QUERY_DIR; do
+    let i++
+    QUERY_FILE=$(basename "$QUERY_DIR")
+    printf "%5d: QUERY %s\n" $i "$QUERY_FILE"
+    HITS=$(mktemp)
+    find "$QUERY_DIR" -maxdepth 1 -mindepth 1 -type d > "$HITS"
+    TOTAL_HITS=0
   
-    while read -r DB_DIR; do
-        echo "DB_DIR $DB_DIR"
-        DB_DIR_BASE=$(basename "$DB_DIR")
-        SUMMARY="${SAMPLE_DIR}/${DB_DIR_BASE}.tab"
-        echo "SUMMARY $SUMMARY"
-        cat "$DB_DIR/*" > "$SUMMARY"
-        rm -rf "$DB_DIR"
-    done < "$DB_DIRS"
-    rm "$DB_DIRS"
+    while read -r HIT_DIR; do
+        HIT_ID=$(basename "$HIT_DIR")
+        ALL_HITS="$HIT_DIR.tab"
+        cat $HIT_DIR/* > "$ALL_HITS"
+        rm -rf "$HIT_DIR"
+        NUM_HITS=$(lc "$ALL_HITS")
+        echo "        => NUM_HITS \"$NUM_HITS\" to SAMPLE_ID \"$HIT_ID\""
+        TOTAL_HITS=$((TOTAL_HITS + NUM_HITS))
+    done < "$HITS"
+    rm "$HITS"
+    echo ">>>>> TOTAL HITS \"$TOTAL_HITS\" <<<<<"
 
-    SAMPLE_NAME=$(basename "$SAMPLE_DIR")
-done < "$SAMPLE_DIRS"
-rm "$SAMPLE_DIRS"
+    echo "singularity exec $IMG annotate.py -b $QUERY_DIR -a $ANNOT_DB -o $QUERY_DIR/annots.tab" >> "$ANNOT_PARAM"
+done < "$QUERY_DIRS"
+rm "$QUERY_DIRS"
 
 #
 # Annotate the output
 #
-singularity exec $IMG annotate.py -b "$BLAST_OUT_DIR" -a "$ANNOT_DB" -o "$OUT_DIR/annotations.tab"
+NUM_JOBS=$(lc "$ANNOT_PARAM")
+echo "Starting launcher NUM_JOBS \"$NUM_JOBS\" for annotation"
+LAUNCHER_JOB_FILE="$ANNOT_PARAM"
+export LAUNCHER_JOB_FILE
+paramrun
+echo "Ended launcher for annotation"
 
-rm -rf "$SPLIT_DIR"
+# 
+# Clean up on aisle 3
+# 
 rm "$ANNOT_PARAM"
+rm -rf "$SPLIT_DIR"
 
 echo "Done."
 echo "Comments to Ken Youens-Clark kyclark@email.arizona.edu"
