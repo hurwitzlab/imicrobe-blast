@@ -9,7 +9,7 @@ PCT_ID=".98"
 OUT_DIR="$PWD/blast-out"
 NUM_THREADS=12
 MAX_SEQS_PER_FILE=1000
-IMG="imicrobe-blast-0.0.1.img"
+IMG="imicrobe-blast-0.0.3.img"
 BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/dbs"
 ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
 BLAST_DB_LIST=""
@@ -211,12 +211,13 @@ while read -r INPUT_FILE; do
   
     if [[ ${#BLAST_TO_DNA} -gt 0 ]]; then
         while read -r DB; do
-            BASE_DB=$(basename $(dirname "$DB")) # use the sample id
-            DB_DIR="${SAMPLE_DIR}/${BASE_DB}"
+            SAMPLE_ID=$(basename $(dirname "$DB")) 
+            BASE_DB=$(basename "$DB") 
+            DB_DIR="$SAMPLE_DIR/$SAMPLE_ID"
       
             [[ ! -e "$DB_DIR" ]] && mkdir -p "$DB_DIR"
       
-            echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$DB\" -query \"$INPUT_FILE\" -out \"${DB_DIR}/${BASENAME}\"" >> "$BLAST_PARAM"
+            echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$DB\" -query \"$INPUT_FILE\" -out \"${DB_DIR}/${BASE_DB}-${BASENAME}\"" >> "$BLAST_PARAM"
         done < "$BLAST_DBS"
     fi
 
