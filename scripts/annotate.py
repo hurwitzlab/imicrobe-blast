@@ -63,7 +63,6 @@ def main():
             annots.append(annot)
             for key in annot.keys():
                 fld_names.add(key)
-            break
 
     #
     # Print headers for output
