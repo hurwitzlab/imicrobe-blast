@@ -72,7 +72,12 @@ def main():
     out_fh = open(out_file, 'wt')
     out_fh.write('\t'.join(cols) + '\n')
     for annot in annots:
-        vals = [annot.get(col) or 'NA' for col in cols]
+        vals = []
+        for col in cols:
+            val = annot.get(col)
+            if val is None:
+                val = ''
+            vals.append(val)
         out_fh.write('\t'.join(vals) + '\n')
 
     out_fh.close()
