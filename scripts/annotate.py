@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
+"""Annotate BLAST output"""
 
 # Author: Ken Youens-Clark <kyclark@email.arizona.edu>
 
 import argparse
+import json
 import os
-import re
 import sqlite3
-import sys
 
 # --------------------------------------------------
 def get_args():
+    """get args"""
     parser = argparse.ArgumentParser(description='Annotate BLAST for iMicrobe')
     parser.add_argument('-b', '--blast_dir', help='BLAST out directory',
-        type=str, metavar='DIR', required=True)
+                        type=str, metavar='DIR', required=True)
     parser.add_argument('-a', '--annot_db', help='Annotation database',
-        type=str, metavar='FILE',
-        default='/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db')
+                        type=str, metavar='DB',
+                        default='/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db')
     parser.add_argument('-o', '--out_file', help='Output file',
-        type=str, metavar='DIR', default='blast-annotations.tab')
-    parser.add_argument('-v', '--verbose', help='Say more stuff',
-        action='store_true')
+                        type=str, metavar='FILE',
+                        default='blast-annotations.tab')
     return parser.parse_args()
 
 # --------------------------------------------------
 def main():
-    args      = get_args()
-    out_file  = args.out_file
+    """main"""
+    args = get_args()
+    out_file = args.out_file
     blast_dir = args.blast_dir
-    annot_db  = args.annot_db
-    verbose   = args.verbose
+    annot_db = args.annot_db
 
     if not os.path.isdir(blast_dir):
         print('--blast_dir "{}" is not a directory'.format(blast_dir))
@@ -53,20 +53,32 @@ def main():
     #
     # Find the field names (2nd in tuple returned by pragma)
     #
-    cursor = db.execute('pragma table_info(sample)');
-    sample_fields = map(lambda x: x[1], cursor.fetchall()) 
-    sql = 'select * from sample where sample_id=?'
+    sql = 'select annots from annot where sample_id=?'
+    annots = []
+    fld_names = set()
+    for blast_out in blast_hits:
+        sample_id, _ = os.path.splitext(blast_out)
+        for row in db.execute(sql, (sample_id,)):
+            annot = json.loads(row[0])
+            annots.append(annot)
+            for key in annot.keys():
+                fld_names.add(key)
 
     #
     # Print headers for output
     #
+    fld_names.remove('sample_id')
+    cols = ['sample_id'] + sorted(fld_names)
     out_fh = open(out_file, 'wt')
-    out_fh.write('\t'.join(sample_fields) + '\n')
-
-    for blast_out in blast_hits:
-        sample_id, ext = os.path.splitext(blast_out)
-        for row in db.execute(sql, (sample_id,)):
-            out_fh.write('\t'.join(list(map(str,row))) + '\n')
+    out_fh.write('\t'.join(cols) + '\n')
+    for annot in annots:
+        vals = []
+        for col in cols:
+            val = annot.get(col)
+            if val is None:
+                val = ''
+            vals.append(val)
+        out_fh.write('\t'.join(vals) + '\n')
 
     out_fh.close()
     print('Done, see output file "{}"'.format(out_file))
