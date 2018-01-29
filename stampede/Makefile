@@ -1,4 +1,4 @@
-APP = imicrobe-blast-0.0.3
+APP = imicrobe-blast-0.0.4
 EMAIL = kyclark@email.arizona.edu
 
 clean:
@@ -17,4 +17,4 @@ job:
 	jobs-submit -F job.json
 
 template:
-	jobs-template $(APP) > job.json
+	jobs-template -A $(APP) > job.json

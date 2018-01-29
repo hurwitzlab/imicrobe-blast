@@ -2,6 +2,9 @@
 
 # Author: Ken Youens-Clark <kyclark@email.arizona.edu>
 
+module load tacc-singularity
+module load launcher
+
 set -u
 
 QUERY=""
@@ -13,9 +16,9 @@ IMG="imicrobe-blast-0.0.3.img"
 BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/dbs"
 ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
 BLAST_DB_LIST=""
+PARAMRUN="$TACC_LAUNCHER_DIR/paramrun"
 
-export LAUNCHER_DIR="$HOME/src/launcher"
-export LAUNCHER_PLUGIN_DIR="$LAUNCHER_DIR/plugins"
+export LAUNCHER_PLUGIN_DIR="$TACC_LAUNCHER_DIR/plugins"
 export LAUNCHER_WORKDIR="$PWD"
 export LAUNCHER_RMI=SLURM
 export LAUNCHER_SCHED=interleaved
@@ -130,7 +133,7 @@ NUM_SPLIT=$(lc "$SPLIT_PARAM")
 echo "Starting launcher NUM_SPLIT \"$NUM_SPLIT\" for split"
 LAUNCHER_JOB_FILE="$SPLIT_PARAM"
 export LAUNCHER_JOB_FILE
-paramrun
+$PARAMRUN
 echo "Ended launcher for split"
 
 SPLIT_FILES=$(mktemp)
@@ -150,8 +153,7 @@ fi
 BLAST_ARGS="-outfmt 6 -num_threads $NUM_THREADS"
 BLAST_PARAM="$$.blast.param"
 cat /dev/null > "$BLAST_PARAM" 
-#BLAST_DBS=$(mktemp)
-BLAST_DBS='blast-dbs'
+BLAST_DBS=$(mktemp)
 
 if [[ -z "$BLAST_DB_LIST" ]] && [[ -f "$BLAST_DB_LIST" ]]; then
     TMP=$(mktemp)
@@ -179,7 +181,7 @@ while read -r SPLIT_FILE; do
     QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
     QUERY_OUT_DIR="$BLAST_OUT_DIR/$QUERY_NAME"
   
-    [[ ! -e "$QUERY_OUT_DIR" ]] && mkdir -p "$QUERY_OUT_DIR"
+    [[ ! -d "$QUERY_OUT_DIR" ]] && mkdir -p "$QUERY_OUT_DIR"
     echo "QUERY_OUT_DIR \"$QUERY_OUT_DIR\""
   
     let i++
@@ -209,39 +211,26 @@ while read -r SPLIT_FILE; do
     fi
   
     if [[ ${#BLAST_TO_DNA} -gt 0 ]]; then
-        i=0
         while read -r BLAST_DB; do
             SAMPLE_ID=$(basename $(dirname "$BLAST_DB")) 
             SAMPLE_NAME=$(basename "$BLAST_DB") 
             HITS_DIR="$QUERY_OUT_DIR/$SAMPLE_ID"
       
-            [[ ! -e "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
+            [[ ! -d "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
       
             echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SAMPLE_NAME-$SPLIT_NAME\"" >> "$BLAST_PARAM"
         done < "$BLAST_DBS"
     fi
-
-#  BLAST_TO_PROT=""
-#  if [[ $TYPE == 'dna' ]]; then 
-#    BLAST_TO_PROT='blastx'
-#  elif [[ $TYPE == 'prot' ]]; then
-#    BLAST_TO_PROT='blastp'
-#  else
-#    echo "Cannot BLAST $BASENAME to PROT (not DNA or prot)"
-#  fi
-#
-#  if [[ ${#BLAST_TO_PROT} -gt 0 ]]; then
-#    echo "$BLAST_TO_PROT $BLAST_ARGS -db $BLAST_DIR/proteins -query $QUERY_FILE -out $BLAST_OUT_DIR/$BASENAME-proteins.tab" >> $BLAST_PARAM
-#  fi
 done < "$SPLIT_FILES"
 rm "$SPLIT_FILES"
+rm "$BLAST_DBS"
 
 NUM_JOBS=$(lc "$BLAST_PARAM")
 
 echo "Starting launcher NUM_JOBS \"$NUM_JOBS\" for BLAST"
 LAUNCHER_JOB_FILE="$BLAST_PARAM"
 export LAUNCHER_JOB_FILE
-paramrun
+$PARAMRUN
 echo "Ended launcher for BLAST"
 rm "$BLAST_PARAM"
 
@@ -257,7 +246,7 @@ find "$BLAST_OUT_DIR" -type d -empty -exec rmdir {} \; 2>/dev/null
 # Add annotations
 #
 QUERY_DIRS=$(mktemp)
-find "$BLAST_OUT_DIR" -maxdepth 1 -mindepth 1 -type d > "$QUERY_DIRS"
+find "$BLAST_OUT_DIR" -maxdepth 1 -mindepth 1 -type d -not -empty > "$QUERY_DIRS"
 
 ANNOT_PARAM="$$.annot.param"
 cat /dev/null > "$ANNOT_PARAM"
@@ -283,7 +272,11 @@ while read -r QUERY_DIR; do
     rm "$HITS"
     echo ">>>>> TOTAL HITS \"$TOTAL_HITS\" <<<<<"
 
-    echo "singularity exec $IMG annotate.py -b $QUERY_DIR -a $ANNOT_DB -o $QUERY_DIR/annots.tab" >> "$ANNOT_PARAM"
+    if [[ $TOTAL_HITS -gt 0 ]]; then
+        echo "singularity exec $IMG annotate.py -b $QUERY_DIR -a $ANNOT_DB -o $QUERY_DIR/annots.tab" >> "$ANNOT_PARAM"
+    else
+        echo "    No HITS, skipping."
+    fi
 done < "$QUERY_DIRS"
 rm "$QUERY_DIRS"
 
@@ -291,11 +284,15 @@ rm "$QUERY_DIRS"
 # Annotate the output
 #
 NUM_JOBS=$(lc "$ANNOT_PARAM")
-echo "Starting launcher NUM_JOBS \"$NUM_JOBS\" for annotation"
-LAUNCHER_JOB_FILE="$ANNOT_PARAM"
-export LAUNCHER_JOB_FILE
-paramrun
-echo "Ended launcher for annotation"
+if [[ $NUM_JOBS -gt 0 ]]; then
+    echo "Starting launcher NUM_JOBS \"$NUM_JOBS\" for annotation"
+    LAUNCHER_JOB_FILE="$ANNOT_PARAM"
+    export LAUNCHER_JOB_FILE
+    $PARAMRUN
+    echo "Ended launcher for annotation"
+else
+    echo "No annotation jobs to launch!"
+fi
 
 # 
 # Clean up on aisle 3

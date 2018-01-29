@@ -1,10 +1,39 @@
 {
-  "name": "imblast",
-  "appId": "iMicrobe-BLAST-0.0.1",
+  "name":"imicrobe-blast test-1516995930",
+  "appId": "imicrobe-blast-0.0.4",
+  "batchQueue": "normal",
+  "executionSystem": "tacc-stampede2-kyclark",
+  "maxRunTime": "12:00:00",
+  "memoryPerNode": "32GB",
+  "nodeCount": 1,
+  "processorsPerNode": 16,
   "archive": true,
+  "archiveSystem": "data.iplantcollaborative.org",
+  "archivePath": null,
   "inputs": {
-    "QUERY": "agave://data.iplantcollaborative.org/kyclark/data/imicrobe-blast/test.fa"
+    "QUERY": [ 
+      "/kyclark/data/blast/pov.fa",
+      "/kyclark/data/blast/dolphin.fa"
+    ]
   },
-  "parameter": {
-  }
+  "parameters": {
+    "PCT_ID": "0.98"
+  },
+  "notifications": [
+    {
+      "url":"https://requestbin.agaveapi.co/sjifrusj?job_id=${JOB_ID}&status=${JOB_STATUS}",
+      "event":"*",
+      "persistent":true
+    },
+    {
+      "url":"kyclark@gmail.com",
+      "event":"FINISHED",
+          "persistent":false
+    },
+    {
+      "url":"kyclark@gmail.com",
+      "event":"FAILED",
+      "persistent":false
+    }
+  ]
 }
