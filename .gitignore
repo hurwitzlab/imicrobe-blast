@@ -1,4 +1,7 @@
+.idea/*
+
 bin
+*.xml
 *.tgz
 *.out
 *.param
