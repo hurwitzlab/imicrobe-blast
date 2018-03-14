@@ -121,7 +121,7 @@ FILE_NUM=0
 ##while read -r SPLIT_FILE; do
 while read -r SPLIT_FILE; do
     SPLIT_NAME=$(basename "$SPLIT_FILE")
-    QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
+    #QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
     QUERY_OUT_DIR="$BLAST_OUT_DIR"
   
     [[ ! -d "$QUERY_OUT_DIR" ]] && mkdir -p "$QUERY_OUT_DIR"
@@ -158,8 +158,8 @@ while read -r SPLIT_FILE; do
         [[ ! -d "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
       
         ##echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SAMPLE_NAME-$SPLIT_NAME\"" >> "$BLAST_PARAM"
-        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_FILE"
-        $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_FILE
+        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME"
+        $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME
     fi
 done < "$INPUT_FILES"
 ##done < "$SPLIT_FILES"
