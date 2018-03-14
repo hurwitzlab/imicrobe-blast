@@ -120,6 +120,7 @@ BLAST_ARGS="-outfmt 6 -num_threads $NUM_THREADS"
 FILE_NUM=0
 ##while read -r SPLIT_FILE; do
 while read -r SPLIT_FILE; do
+    echo $SPLIT_FILE
     SPLIT_NAME=$(basename "$SPLIT_FILE")
     QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
     QUERY_OUT_DIR="$BLAST_OUT_DIR/$QUERY_NAME"
