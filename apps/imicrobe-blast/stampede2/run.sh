@@ -122,7 +122,7 @@ FILE_NUM=0
 while read -r SPLIT_FILE; do
     SPLIT_NAME=$(basename "$SPLIT_FILE")
     QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
-    QUERY_OUT_DIR="$BLAST_OUT_DIR/$SPLIT_NAME"
+    QUERY_OUT_DIR="$BLAST_OUT_DIR"
   
     [[ ! -d "$QUERY_OUT_DIR" ]] && mkdir -p "$QUERY_OUT_DIR"
   
