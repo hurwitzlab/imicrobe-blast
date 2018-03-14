@@ -77,7 +77,7 @@ done
 #    exit 1
 #fi
 
-if [[ ! -d "$BLAST_DB" ]]; then
+if [[ ! -d "$BLAST_DB.nal" ]]; then
     echo "BLAST_DB \"$BLAST_DB\" does not exist."
     exit 1
 fi
