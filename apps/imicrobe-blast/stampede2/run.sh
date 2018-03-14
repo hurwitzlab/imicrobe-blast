@@ -109,7 +109,7 @@ if [[ $NUM_INPUT -lt 1 ]]; then
     echo "No input files found"
     exit 1
 else
-    echo "Found $NUM_INPUT input files"
+    echo "Found $NUM_INPUT input file(s)"
 fi
 
 #
@@ -120,7 +120,6 @@ BLAST_ARGS="-outfmt 6 -num_threads $NUM_THREADS"
 FILE_NUM=0
 ##while read -r SPLIT_FILE; do
 while read -r SPLIT_FILE; do
-    echo $SPLIT_FILE
     SPLIT_NAME=$(basename "$SPLIT_FILE")
     QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
     QUERY_OUT_DIR="$BLAST_OUT_DIR/$QUERY_NAME"
@@ -129,7 +128,8 @@ while read -r SPLIT_FILE; do
   
     FILE_NUM=$((FILE_NUM + 1))
     printf "%5d: QUERY %s\n" "$FILE_NUM" "$SPLIT_NAME"
-    EXT="${QUERY_NAME##*.}"
+    ##EXT="${QUERY_NAME##*.}"
+    EXT="${SPLIT_NAME##*.}"
     TYPE="unknown"
     if [[ $EXT == "fa"    ]] || \
        [[ $EXT == "fna"   ]] || \
@@ -150,16 +150,16 @@ while read -r SPLIT_FILE; do
     elif [[ $TYPE == "prot" ]]; then
         BLAST_TO_DNA="tblastn"
     else
-        echo "Cannot BLAST \"$QUERY_NAME\" to DNA (not DNA or prot)"
+        echo "Cannot BLAST \"$SPLIT_FILE\" to DNA (not DNA or prot)"
     fi
   
     if [[ ${#BLAST_TO_DNA} -gt 0 ]]; then
-        HITS_DIR="$QUERY_OUT_DIR/$SAMPLE_ID"
+        HITS_DIR="$QUERY_OUT_DIR/$SPLIT_NAME"
         [[ ! -d "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
       
         ##echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SAMPLE_NAME-$SPLIT_NAME\"" >> "$BLAST_PARAM"
-        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SAMPLE_NAME-$SPLIT_NAME\""
-        $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SAMPLE_NAME-$SPLIT_NAME\"
+        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SPLIT_NAME\""
+        $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SPLIT_NAME\"
     fi
 done < "$INPUT_FILES"
 ##done < "$SPLIT_FILES"
