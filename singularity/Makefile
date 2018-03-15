@@ -1,7 +1,7 @@
 APP = imicrobe-blast
-SINGULARITY = /usr/local/bin/singularity
+SINGULARITY=singularity
 SIZE = 1024
-VERSION = 0.0.3
+VERSION = 0.0.5
 IMAGE_NAME = $(APP)-$(VERSION).img
 
 img:
@@ -18,3 +18,9 @@ shell:
 
 scp:
 	scp $(IMAGE_NAME) stampede:/work/03137/kyclark/$(APP)/stampede
+
+iput:
+	iput $(IMAGE_NAME)
+
+iget:
+	iget $(IMAGE_NAME)
