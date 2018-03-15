@@ -10,8 +10,6 @@ module load blast
 set -u
 set -e
 
-PWD=`pwd`
-
 QUERY=""
 PCT_ID=".98"
 OUT_DIR="$PWD/blast-out"
@@ -85,10 +83,10 @@ if [[ ! -f "$BLAST_DB.nal" ]]; then
     exit 1
 fi
 
-if [[ $NUM_THREADS -lt 1 ]]; then
-    echo "NUM_THREADS \"$NUM_THREADS\" cannot be less than 1"
-    exit 1
-fi
+#if [[ $NUM_THREADS -lt 1 ]]; then
+#    echo "NUM_THREADS \"$NUM_THREADS\" cannot be less than 1"
+#    exit 1
+#fi
 
 [[ -d "$OUT_DIR" ]] && mkdir -p "$OUT_DIR"
 
