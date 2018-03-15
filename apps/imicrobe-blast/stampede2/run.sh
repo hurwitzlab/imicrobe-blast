@@ -10,15 +10,23 @@ module load blast
 set -u
 set -e
 
+PWD=`pwd`
+
 QUERY=""
 PCT_ID=".98"
 OUT_DIR="$PWD/blast-out"
-NUM_THREADS=48
+#NUM_THREADS=48
 IMG="imicrobe-blast-0.0.5.img"
-##BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/one-db"
 BLAST_DB="/work/05066/imicrobe/iplantc.org/data/blast/imicrobe"
-ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
-##BLAST_DB_LIST=""
+#ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
+
+PARAMRUN="$TACC_LAUNCHER_DIR/paramrun"
+
+export LAUNCHER_PLUGIN_DIR="$TACC_LAUNCHER_DIR/plugins"
+export LAUNCHER_WORKDIR="$PWD"
+export LAUNCHER_RMI=SLURM
+export LAUNCHER_SCHED=interleaved
+export LAUNCHER_PPN=24
 
 function lc() {
     wc -l "$1" | awk '{print $1}'
@@ -34,7 +42,7 @@ function HELP() {
     echo
     echo " -p PCT_ID ($PCT_ID)"
     echo " -o OUT_DIR ($OUT_DIR)"
-    echo " -n NUM_THREADS ($NUM_THREADS)"
+    #echo " -n NUM_THREADS ($NUM_THREADS)"
     echo " -b BLAST_DB_LIST"
     echo 
     exit ${1:-0}
@@ -42,7 +50,7 @@ function HELP() {
 
 [[ $# -eq 0 ]] && HELP 1
 
-while getopts :b:o:n:p:q:h OPT; do
+while getopts :b:n:o:p:q:h OPT; do
     case $OPT in
         h)
             HELP
@@ -50,9 +58,9 @@ while getopts :b:o:n:p:q:h OPT; do
         b)
             BLAST_DB_LIST="$OPTARG"
             ;;
-        n)
-            NUM_THREADS="$OPTARG"
-            ;;
+        #n)
+        #    NUM_THREADS="$OPTARG"
+        #    ;;
         o)
             OUT_DIR="$OPTARG"
             ;;
@@ -71,11 +79,6 @@ while getopts :b:o:n:p:q:h OPT; do
             exit 1
     esac
 done
-
-#if [[ ! -d "$BLAST_DB_DIR" ]]; then
-#    echo "BLAST_DB_DIR \"$BLAST_DB_DIR\" does not exist."
-#    exit 1
-#fi
 
 if [[ ! -f "$BLAST_DB.nal" ]]; then
     echo "BLAST_DB \"$BLAST_DB\" does not exist."
@@ -113,12 +116,41 @@ else
 fi
 
 #
+# Split the input files
+#
+SPLIT_DIR="$OUT_DIR/split"
+echo "SPLIT_DIR \"$SPLIT_DIR\""
+[[ ! -d "$SPLIT_DIR" ]] && mkdir -p "$SPLIT_DIR"
+
+SPLIT_PARAM="$$.split.param"
+while read -r FILE; do
+    BASENAME=$(basename "$FILE")
+    echo "singularity exec $IMG fasplit -f $FILE -o $SPLIT_DIR -n 24" >> "$SPLIT_PARAM"
+done < "$INPUT_FILES"
+
+NUM_SPLIT=$(lc "$SPLIT_PARAM")
+echo "Starting launcher NUM_SPLIT \"$NUM_SPLIT\" for split"
+export LAUNCHER_JOB_FILE="$SPLIT_PARAM"
+$PARAMRUN
+echo "Ended launcher for split"
+
+SPLIT_FILES=$(mktemp)
+find "$SPLIT_DIR" -type f -size +0c > "$SPLIT_FILES"
+NUM_SPLIT=$(lc "$SPLIT_FILES")
+
+echo "After splitting, there are NUM_SPLIT \"$NUM_SPLIT\""
+
+if [[ "$NUM_SPLIT" -lt 1 ]]; then
+    echo "Something went wrong with splitting."
+    exit 1
+fi
+
+#
 # Run BLAST
 #
-BLAST_ARGS="-outfmt 6 -num_threads $NUM_THREADS"
+BLAST_ARGS="-outfmt 6 -num_threads 2"
 
 FILE_NUM=0
-##while read -r SPLIT_FILE; do
 while read -r SPLIT_FILE; do
     SPLIT_NAME=$(basename "$SPLIT_FILE")
     #QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
@@ -161,8 +193,8 @@ while read -r SPLIT_FILE; do
         echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME"
         $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME
     fi
-done < "$INPUT_FILES"
-##done < "$SPLIT_FILES"
+#done < "$INPUT_FILES"
+done < "$SPLIT_FILES"
 
 echo "Done."
 echo "Comments to Ken Youens-Clark kyclark@email.arizona.edu"
