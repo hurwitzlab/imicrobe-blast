@@ -13,7 +13,7 @@ OUT_DIR="$SCRATCH/imicrobe-blast/test"
 
 [[ -d "$OUT_DIR" ]] && rm -rf "$OUT_DIR"
 
-DATA_DIR=/work/05066/imicrobe/iplantc.org/data/mmetsp/fasta/
+DATA_DIR=/work/05066/imicrobe/iplantc.org/data/mmetsp/fasta
 
 # these data files are large
 # -rw------- 1 kyclark G-818024   54525952 Oct 10 12:36 1675-MMETSP0011_2-Rhodosorus-marinus-769.1.fa
