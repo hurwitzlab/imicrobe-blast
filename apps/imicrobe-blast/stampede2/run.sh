@@ -3,7 +3,8 @@
 # Author: Ken Youens-Clark <kyclark@email.arizona.edu>
 # Author: Joshua Lynch <jklynch@email.arizona.edu>
 
-##module load tacc-singularity
+module load tacc-singularity
+
 ##module load launcher
 
 # the next two lines load 'testing' version
