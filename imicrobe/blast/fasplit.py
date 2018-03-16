@@ -34,7 +34,7 @@ def main():
         files_cycle = itertools.cycle(files)
 
         for record in SeqIO.parse(fasta, "fasta"):
-            SeqIO.write(record, files_cycle.next(), "fasta")
+            SeqIO.write(record, next(files_cycle), "fasta")
             nseq += 1
     finally:
         for f in files:
