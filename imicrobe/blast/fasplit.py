@@ -30,7 +30,7 @@ def main():
 
     try:
         # open all output files
-        files = [open(os.path.join(out_dir, '{}_{}{}'.format(basename, file_number, ext), 'wt')) for file_number in range(nfile)]
+        files = [open(os.path.join(out_dir, '{}_{}{}'.format(basename, file_number, ext)), 'wt') for file_number in range(nfile)]
         files_cycle = itertools.cycle(files)
 
         for record in SeqIO.parse(fasta, "fasta"):
