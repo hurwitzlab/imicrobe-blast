@@ -3,9 +3,18 @@
 # Author: Ken Youens-Clark <kyclark@email.arizona.edu>
 # Author: Joshua Lynch <jklynch@email.arizona.edu>
 
-module load tacc-singularity
-module load launcher
+##module load tacc-singularity
+##module load launcher
+
+# the next two lines load 'testing' version
+# of the TACC launcher
+module use /scratch/01255/siliu/modulefiles
+module load launcher/3.2
+
 module load blast
+
+module list
+
 
 set -u
 set -e
@@ -20,9 +29,9 @@ BLAST_DB="/work/05066/imicrobe/iplantc.org/data/blast/imicrobe"
 
 PARAMRUN="$TACC_LAUNCHER_DIR/paramrun"
 
-export LAUNCHER_PLUGIN_DIR="$TACC_LAUNCHER_DIR/plugins"
+##export LAUNCHER_PLUGIN_DIR="$TACC_LAUNCHER_DIR/plugins"
 export LAUNCHER_WORKDIR="$PWD"
-export LAUNCHER_RMI=SLURM
+##export LAUNCHER_RMI=SLURM
 export LAUNCHER_SCHED=dynamic
 export LAUNCHER_PPN=24
 
@@ -200,8 +209,7 @@ NUM_SPLIT=$(lc "$BLAST_PARAM")
 echo "Starting launcher NUM_SPLIT \"$NUM_SPLIT\" for split"
 export LAUNCHER_JOB_FILE="$SPLIT_PARAM"
 $PARAMRUN
-echo "Ended launcher for split"
-
+echo "Ended launcher for BLAST"
 
 
 echo "Done."
