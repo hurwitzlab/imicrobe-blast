@@ -25,7 +25,7 @@ PCT_ID=".98"
 OUT_DIR="$PWD/blast-out"
 #NUM_THREADS=48
 IMG="imicrobe-blast-0.0.5.img"
-BLAST_DB="/work/05066/imicrobe/iplantc.org/data/blast/imicrobe"
+BLAST_DB="/work/05066/imicrobe/iplantc.org/data/blast/one-db/imicrobe_blast_db"
 #ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
 
 PARAMRUN="$TACC_LAUNCHER_DIR/paramrun"
@@ -162,7 +162,6 @@ BLAST_ARGS="-outfmt 6 -num_threads 2"
 FILE_NUM=0
 while read -r SPLIT_FILE; do
     SPLIT_NAME=$(basename "$SPLIT_FILE")
-    #QUERY_NAME=$(basename $(dirname "$SPLIT_FILE"))
     QUERY_OUT_DIR="$BLAST_OUT_DIR"
   
     [[ ! -d "$QUERY_OUT_DIR" ]] && mkdir -p "$QUERY_OUT_DIR"
@@ -198,16 +197,13 @@ while read -r SPLIT_FILE; do
         HITS_DIR="$QUERY_OUT_DIR"
         [[ ! -d "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
       
-        ##echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SAMPLE_NAME-$SPLIT_NAME\"" >> "$BLAST_PARAM"
-        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME"
+        #echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME"
         echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME" >> "$BLAST_PARAM"
-        ##$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME
     fi
-#done < "$INPUT_FILES"
 done < "$SPLIT_FILES"
 
 NUM_SPLIT=$(lc "$BLAST_PARAM")
-echo "Starting launcher \"$NUM_SPLIT\" for BLAST"
+echo "Starting \"$NUM_SPLIT\" launcher tasks for BLAST"
 export LAUNCHER_JOB_FILE="$BLAST_PARAM"
 $PARAMRUN
 echo "Ended launcher for BLAST"
