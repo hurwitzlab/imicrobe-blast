@@ -23,7 +23,7 @@ PARAMRUN="$TACC_LAUNCHER_DIR/paramrun"
 export LAUNCHER_PLUGIN_DIR="$TACC_LAUNCHER_DIR/plugins"
 export LAUNCHER_WORKDIR="$PWD"
 export LAUNCHER_RMI=SLURM
-export LAUNCHER_SCHED=interleaved
+export LAUNCHER_SCHED=dynamic
 export LAUNCHER_PPN=24
 
 function lc() {
@@ -146,6 +146,7 @@ fi
 #
 # Run BLAST
 #
+BLAST_PARAM="$$.blast.param"
 BLAST_ARGS="-outfmt 6 -num_threads 2"
 
 FILE_NUM=0
@@ -189,10 +190,19 @@ while read -r SPLIT_FILE; do
       
         ##echo "singularity exec $IMG $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query \"$SPLIT_FILE\" -out \"$HITS_DIR/$SAMPLE_NAME-$SPLIT_NAME\"" >> "$BLAST_PARAM"
         echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME"
-        $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME
+        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME" >> "$BLAST_PARAM"
+        ##$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME
     fi
 #done < "$INPUT_FILES"
 done < "$SPLIT_FILES"
+
+NUM_SPLIT=$(lc "$BLAST_PARAM")
+echo "Starting launcher NUM_SPLIT \"$NUM_SPLIT\" for split"
+export LAUNCHER_JOB_FILE="$SPLIT_PARAM"
+$PARAMRUN
+echo "Ended launcher for split"
+
+
 
 echo "Done."
 echo "Comments to Ken Youens-Clark kyclark@email.arizona.edu"
