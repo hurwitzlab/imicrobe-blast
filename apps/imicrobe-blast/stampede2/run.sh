@@ -207,8 +207,8 @@ while read -r SPLIT_FILE; do
 done < "$SPLIT_FILES"
 
 NUM_SPLIT=$(lc "$BLAST_PARAM")
-echo "Starting launcher NUM_SPLIT \"$NUM_SPLIT\" for split"
-export LAUNCHER_JOB_FILE="$SPLIT_PARAM"
+echo "Starting launcher \"$NUM_SPLIT\" for BLAST"
+export LAUNCHER_JOB_FILE="$BLAST_PARAM"
 $PARAMRUN
 echo "Ended launcher for BLAST"
 
