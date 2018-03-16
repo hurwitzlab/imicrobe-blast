@@ -89,7 +89,7 @@ while getopts :b:n:o:p:q:h OPT; do
     esac
 done
 
-if [[ ! -f "$BLAST_DB.nal" ]]; then
+if [[ ! -f "$BLAST_DB_DIR/$BLAST_DB.nal" ]]; then
     echo "BLAST_DB \"$BLAST_DB\" does not exist."
     exit 1
 fi
