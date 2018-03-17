@@ -26,6 +26,8 @@ OUT_DIR="$PWD/blast-out"
 #NUM_THREADS=48
 IMG="imicrobe-blast-0.0.5.img"
 BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/one-db"
+# this is a BLAST environment variable
+export BLASTDB=$BLAST_DB_DIR
 BLAST_DB="imicrobe_blast_db"
 #ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
 
@@ -199,7 +201,7 @@ while read -r SPLIT_FILE; do
         [[ ! -d "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
 
         #echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME"
-        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB_DIR/$BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME" >> "$BLAST_PARAM"
+        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME" >> "$BLAST_PARAM"
     fi
 done < "$SPLIT_FILES"
 
