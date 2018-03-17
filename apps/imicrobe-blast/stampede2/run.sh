@@ -53,7 +53,7 @@ function HELP() {
     echo " -o OUT_DIR ($OUT_DIR)"
     #echo " -n NUM_THREADS ($NUM_THREADS)"
     echo " -b BLAST_DB_LIST"
-    echo 
+    echo
     exit ${1:-0}
 }
 
@@ -164,9 +164,9 @@ FILE_NUM=0
 while read -r SPLIT_FILE; do
     SPLIT_NAME=$(basename "$SPLIT_FILE")
     QUERY_OUT_DIR="$BLAST_OUT_DIR"
-  
+
     [[ ! -d "$QUERY_OUT_DIR" ]] && mkdir -p "$QUERY_OUT_DIR"
-  
+
     FILE_NUM=$((FILE_NUM + 1))
     printf "%5d: QUERY %s\n" "$FILE_NUM" "$SPLIT_NAME"
     ##EXT="${QUERY_NAME##*.}"
@@ -184,22 +184,22 @@ while read -r SPLIT_FILE; do
     elif [[ $EXT == "fra" ]]; then
         TYPE="rna"
     fi
-  
+
     BLAST_TO_DNA=""
-    if [[ $TYPE == "dna" ]]; then 
+    if [[ $TYPE == "dna" ]]; then
         BLAST_TO_DNA="blastn"
     elif [[ $TYPE == "prot" ]]; then
         BLAST_TO_DNA="tblastn"
     else
         echo "Cannot BLAST \"$SPLIT_FILE\" to DNA (not DNA or prot)"
     fi
-  
+
     if [[ ${#BLAST_TO_DNA} -gt 0 ]]; then
         HITS_DIR="$QUERY_OUT_DIR"
         [[ ! -d "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
-      
+
         #echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME"
-        echo "cd $BLAST_DB_DIR; $BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME" >> "$BLAST_PARAM"
+        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME" >> "$BLAST_PARAM"
     fi
 done < "$SPLIT_FILES"
 
