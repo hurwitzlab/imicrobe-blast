@@ -28,7 +28,7 @@ IMG="imicrobe-blast-0.0.5.img"
 BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/one-db"
 # this is a BLAST environment variable
 export BLASTDB=$BLAST_DB_DIR
-export BLAST_DBS="imicrobe-aa imicrobe-ab imicrobe-ac imicrobe-ad"
+export BLAST_DBS="imicrobe-aa imicrobe-ab"
 #BLAST_DB="imicrobe_blast_db"
 #ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
 
