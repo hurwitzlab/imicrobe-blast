@@ -197,10 +197,12 @@ while read -r SPLIT_FILE; do
         HITS_DIR="$QUERY_OUT_DIR"
         [[ ! -d "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
 
-        #echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db $BLAST_DB -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME"
         echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DBS\" -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME" >> "$BLAST_PARAM"
     fi
-done < "$SPLIT_FILES"
+# this line blasts the split files
+#done < "$SPLIT_FILES"
+# this line blasts the input files
+done < "$INPUT_FILES"
 
 NUM_SPLIT=$(lc "$BLAST_PARAM")
 echo "Starting $LAUNCHER_PPN launcher tasks"
