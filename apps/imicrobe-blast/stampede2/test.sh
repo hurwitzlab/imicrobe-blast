@@ -4,7 +4,7 @@
 #SBATCH -N 1
 #SBATCH -n 1
 #SBATCH -t 24:00:00
-#SBATCH -p normal
+#SBATCH -p skx-normal
 #SBATCH -J imcrblst
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --mail-user jklynch@email.arizona.edu
