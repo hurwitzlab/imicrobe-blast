@@ -31,6 +31,7 @@ export BLAST_DBS="imicrobe-aa imicrobe-ab"
 #ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
 
 PARAMRUN="$TACC_LAUNCHER_DIR/paramrun"
+echo "PARAMRUN: ${PARAMRUN}"
 
 export LAUNCHER_WORKDIR="$PWD"
 export LAUNCHER_SCHED=dynamic
@@ -126,32 +127,32 @@ fi
 #
 # Split the input files
 #
-SPLIT_DIR="$OUT_DIR/split"
-echo "SPLIT_DIR \"$SPLIT_DIR\""
-[[ ! -d "$SPLIT_DIR" ]] && mkdir -p "$SPLIT_DIR"
-
-SPLIT_PARAM="$$.split.param"
-while read -r FILE; do
-    BASENAME=$(basename "$FILE")
-    echo "singularity exec $IMG fasplit -f $FILE -o $SPLIT_DIR -n 24" >> "$SPLIT_PARAM"
-done < "$INPUT_FILES"
-
-NUM_SPLIT=$(lc "$SPLIT_PARAM")
-echo "Starting launcher NUM_SPLIT \"$NUM_SPLIT\" for split"
-export LAUNCHER_JOB_FILE="$SPLIT_PARAM"
-$PARAMRUN
-echo "Ended launcher for split"
-
-SPLIT_FILES=$(mktemp)
-find "$SPLIT_DIR" -type f -size +0c > "$SPLIT_FILES"
-NUM_SPLIT=$(lc "$SPLIT_FILES")
-
-echo "After splitting, there are NUM_SPLIT \"$NUM_SPLIT\""
-
-if [[ "$NUM_SPLIT" -lt 1 ]]; then
-    echo "Something went wrong with splitting."
-    exit 1
-fi
+#SPLIT_DIR="$OUT_DIR/split"
+#echo "SPLIT_DIR \"$SPLIT_DIR\""
+#[[ ! -d "$SPLIT_DIR" ]] && mkdir -p "$SPLIT_DIR"
+#
+#SPLIT_PARAM="$$.split.param"
+#while read -r FILE; do
+#    BASENAME=$(basename "$FILE")
+#    echo "singularity exec $IMG fasplit -f $FILE -o $SPLIT_DIR -n 24" >> "$SPLIT_PARAM"
+#done < "$INPUT_FILES"
+#
+#NUM_SPLIT=$(lc "$SPLIT_PARAM")
+#echo "Starting launcher NUM_SPLIT \"$NUM_SPLIT\" for split"
+#export LAUNCHER_JOB_FILE="$SPLIT_PARAM"
+#$PARAMRUN
+#echo "Ended launcher for split"
+#
+#SPLIT_FILES=$(mktemp)
+#find "$SPLIT_DIR" -type f -size +0c > "$SPLIT_FILES"
+#NUM_SPLIT=$(lc "$SPLIT_FILES")
+#
+#echo "After splitting, there are NUM_SPLIT \"$NUM_SPLIT\""
+#
+#if [[ "$NUM_SPLIT" -lt 1 ]]; then
+#    echo "Something went wrong with splitting."
+#    exit 1
+#fi
 
 #
 # Run BLAST
@@ -160,16 +161,16 @@ BLAST_PARAM="$$.blast.param"
 BLAST_ARGS="-outfmt 6 -num_threads 2"
 
 FILE_NUM=0
-while read -r SPLIT_FILE; do
-    SPLIT_NAME=$(basename "$SPLIT_FILE")
+while read -r INPUT_FILE; do
+    INPUT_NAME=$(basename "$INPUT_FILE")
     QUERY_OUT_DIR="$BLAST_OUT_DIR"
 
     [[ ! -d "$QUERY_OUT_DIR" ]] && mkdir -p "$QUERY_OUT_DIR"
 
     FILE_NUM=$((FILE_NUM + 1))
-    printf "%5d: QUERY %s\n" "$FILE_NUM" "$SPLIT_NAME"
+    printf "%5d: QUERY %s\n" "$FILE_NUM" "$INPUT_NAME"
     ##EXT="${QUERY_NAME##*.}"
-    EXT="${SPLIT_NAME##*.}"
+    EXT="${INPUT_NAME##*.}"
     TYPE="unknown"
     if [[ $EXT == "fa"    ]] || \
        [[ $EXT == "fna"   ]] || \
@@ -190,14 +191,17 @@ while read -r SPLIT_FILE; do
     elif [[ $TYPE == "prot" ]]; then
         BLAST_TO_DNA="tblastn"
     else
-        echo "Cannot BLAST \"$SPLIT_FILE\" to DNA (not DNA or prot)"
+        echo "Cannot BLAST \"$INPUT_FILE\" to DNA (not DNA or prot)"
     fi
 
     if [[ ${#BLAST_TO_DNA} -gt 0 ]]; then
         HITS_DIR="$QUERY_OUT_DIR"
         [[ ! -d "$HITS_DIR" ]] && mkdir -p "$HITS_DIR"
 
-        echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DBS\" -query $SPLIT_FILE -out $HITS_DIR/$SPLIT_NAME" >> "$BLAST_PARAM"
+        while read -r BLAST_DB; do
+            echo "$BLAST_TO_DNA $BLAST_ARGS -perc_identity $PCT_ID -db \"$BLAST_DB\" -query $INPUT_FILE -out $HITS_DIR/$INPUT_NAME-$BLAST_DB" >> "$BLAST_PARAM"
+        done < blast_dbs_24.txt
+
     fi
 # this line blasts the split files
 #done < "$SPLIT_FILES"
