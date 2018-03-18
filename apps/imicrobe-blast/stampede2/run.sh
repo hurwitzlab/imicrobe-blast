@@ -24,7 +24,7 @@ QUERY=""
 PCT_ID=".98"
 OUT_DIR="$PWD/blast-out"
 IMG="imicrobe-blast-0.0.5.img"
-BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/one-db"
+BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/db24"
 # this is a BLAST environment variable
 export BLASTDB=$BLAST_DB_DIR
 export BLAST_DBS="imicrobe-aa imicrobe-ab"
@@ -203,9 +203,6 @@ while read -r INPUT_FILE; do
         done < blast_dbs_24.txt
 
     fi
-# this line blasts the split files
-#done < "$SPLIT_FILES"
-# this line blasts the input files
 done < "$INPUT_FILES"
 
 NUM_SPLIT=$(lc "$BLAST_PARAM")
