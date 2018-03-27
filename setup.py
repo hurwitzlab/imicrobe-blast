@@ -103,7 +103,7 @@ setup(
         'console_scripts': [
             'fasplit=imicrobe.blast.fasplit:main',
             'filter_lines=imicrobe.blast.blastdb.filter_lines:main',
-            'split_lines=imicrobe.blast.blastdb.pack_file_paths:main'
+            'pack_file_paths=imicrobe.blast.blastdb.pack_file_paths:main'
         ],
     },
 )
