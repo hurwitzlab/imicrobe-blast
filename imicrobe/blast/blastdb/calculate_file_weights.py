@@ -40,4 +40,4 @@ with open('cache.txt', 'wt') as cache_file:
         print('parsed file {} in {:5.2f}s'.format(fasta_fp, time.time()-t0))
         print('  weight is {}'.format(round(weight)))
 
-        sys.stdout.write('{},{}\n'.format(round(weight), fp))
+        sys.stdout.write('{},{}\n'.format(round(weight), fasta_fp))
