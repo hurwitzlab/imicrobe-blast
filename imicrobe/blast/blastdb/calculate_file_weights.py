@@ -31,7 +31,7 @@ with open('cache.txt', 'wt') as cache_file:
         for record in SeqIO.parse(fasta_fp, format='fasta'):
             n = len(record.seq)
             weight += n ** 2
-            cache_file.write(n)
+            cache_file.write(str(n))
             cache_file.write('\t')
             cache_file.write(record.id)
             cache_file.write('\n')
