@@ -1,8 +1,9 @@
 """
 """
-import glob
+import argparse
+import itertools
+import operator
 import os.path
-import random
 import pprint
 import sys
 
@@ -40,18 +41,18 @@ def pack_file_lists(file_list, bin_count):
     for (weight, name) in sorted(file_list, reverse=True):
         bin_list[0]['bin_contents'].append((weight, name))
         bin_list[0]['bin_weight'] += weight
-        bin_list.sort(key=lambda bin: bin['bin_weight'])
+        bin_list.sort(key=lambda bin_: bin_['bin_weight'])
 
     print('minimum bin weight: {:8.1f}\nmaximum bin weight: {:8.1f}'.format(
         bin_list[0]['bin_weight'], bin_list[-1]['bin_weight']))
 
-    return [bin['bin_contents'] for bin in bin_list]
+    return [bin_['bin_contents'] for bin_ in bin_list]
 
 
 def make_packed_file_lists(file_paths, file_list_count):
     """
     """
-    print('found {} file paths with glob "{}"'.format(len(file_paths), file_glob))
+    print('{} file paths will be packed into {} lists'.format(len(file_paths), file_list_count))
 
     file_size_path_list = [(os.path.getsize(fp), fp) for fp in file_paths]
     print('first 5 files:\n{}'.format(pprint.pformat(file_size_path_list[:5])))
