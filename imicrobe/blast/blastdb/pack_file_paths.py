@@ -22,7 +22,7 @@ def get_args():
 
 def pack_file_lists(file_list, bin_count):
     """
-    Given 'file_list' of (file size, file path) tuples return a list of 'bin_count' lists
+    Given 'file_list' of (file weight, file path) tuples return a list of 'bin_count' lists
     of file paths such that the files in each list have approximately the same total number
     of bytes.
 
@@ -49,12 +49,13 @@ def pack_file_lists(file_list, bin_count):
     return [bin_['bin_contents'] for bin_ in bin_list]
 
 
-def make_packed_file_lists(file_paths, file_list_count):
+def make_packed_file_lists(file_size_path_list, file_list_count):
     """
     """
-    print('{} file paths will be packed into {} lists'.format(len(file_paths), file_list_count))
+    print('{} file paths will be packed into {} lists'.format(
+        len(file_size_path_list), file_list_count))
 
-    file_size_path_list = [(os.path.getsize(fp), fp) for fp in file_paths]
+    #file_size_path_list = [(os.path.getsize(fp), fp) for fp in file_paths]
     print('first 5 files:\n{}'.format(pprint.pformat(file_size_path_list[:5])))
 
     packed_file_lists = pack_file_lists(file_size_path_list, bin_count=file_list_count)
@@ -76,7 +77,9 @@ def main():
         print('--split-count must be greater than 1')
         quit()
 
-    file_paths = [line.strip() for line in sys.stdin.readlines()]
+    # file_paths looks like this:
+    #   [(1234, /path/to/file), (5678, /path/to/file), ..., (91234, /path/to/file)]
+    file_paths = [line.strip().split(',') for line in sys.stdin.readlines()]
     packed_file_lists = make_packed_file_lists(file_paths=file_paths, file_list_count=args.split_count)
 
     # this iterator yields 'aa', 'ab', 'ac', ..., 'zz'
