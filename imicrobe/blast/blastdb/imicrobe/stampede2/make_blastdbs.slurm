@@ -6,7 +6,7 @@
 #SBATCH -n 1
 #SBATCH -t 12:00:00
 #SBATCH -p skx-normal
-#SBATCH -J make-blast-db
+#SBATCH -J make-imicrobe-blast-db
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --mail-user jklynch@email.arizona.edu
 
