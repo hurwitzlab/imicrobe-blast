@@ -18,20 +18,21 @@ module load launcher/3.2
 
 IMG=../../../../../singularity/imicrobe-blast-0.0.5.img
 OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT
+OHANA_DATA_TYPE=genes
 FILE_GROUPS=24
 
-export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24/genes
+export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24/${OHANA_DATA_TYPE}
 
 mkdir -p $BLAST_DB_OUTPUT
 
 find ${OHANA_HOT_DATA} \
     -type f \
     -regextype posix-egrep \
-    -regex ".+\.genes\.fna$" \
+    -regex ".+\.${OHANA_DATA_TYPE}\.fna$" \
     -size +0c \
     | sort \
     | uniq \
-    | singularity exec ${IMG} pack_file_paths -n ${FILE_GROUPS} --prefix ohana-genes-
+    | singularity exec ${IMG} pack_file_paths -n ${FILE_GROUPS} --prefix ohana-${OHANA_DATA_TYPE}-
 
 #
 # go!
@@ -51,5 +52,5 @@ export LAUNCHER_PPN=${FILE_GROUPS}
 
 export LAUNCHER_SCHEDULER=dynamic
 
-export LAUNCHER_JOB_FILE=jobs${FILE_GROUPS}.launcher
+export LAUNCHER_JOB_FILE=jobs${FILE_GROUPS}.${OHANA_DATA_TYPE}.launcher
 $LAUNCHER_DIR/paramrun
