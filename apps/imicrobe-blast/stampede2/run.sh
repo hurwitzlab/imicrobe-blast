@@ -5,8 +5,6 @@
 
 module load tacc-singularity
 
-##module load launcher
-
 # the next two lines load 'testing' version
 # of the TACC launcher
 module use /scratch/01255/siliu/modulefiles
@@ -15,7 +13,6 @@ module load launcher/3.2
 module load blast
 
 module list
-
 
 set -u
 set -e
@@ -27,7 +24,6 @@ IMG="imicrobe-blast-0.0.5.img"
 BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/db24"
 # this is a BLAST environment variable
 export BLASTDB=$BLAST_DB_DIR
-export BLAST_DBS="imicrobe-aa imicrobe-ab"
 #ANNOT_DB="/work/05066/imicrobe/iplantc.org/data/imicrobe-annotdb/annots.db"
 
 PARAMRUN="$TACC_LAUNCHER_DIR/paramrun"

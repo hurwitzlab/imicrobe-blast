@@ -21,7 +21,7 @@ OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT
 OHANA_DATA_TYPE=genes
 FILE_GROUPS=24
 
-export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24/${OHANA_DATA_TYPE}
+export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24
 
 mkdir -p $BLAST_DB_OUTPUT
 
@@ -32,6 +32,7 @@ find ${OHANA_HOT_DATA} \
     -size +0c \
     | sort \
     | uniq \
+    | singularity exec ${IMG} calculate_file_weights \
     | singularity exec ${IMG} pack_file_paths -n ${FILE_GROUPS} --prefix ohana-${OHANA_DATA_TYPE}-
 
 #
