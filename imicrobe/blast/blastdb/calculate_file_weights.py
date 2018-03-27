@@ -18,26 +18,33 @@ import time
 from Bio import SeqIO
 
 
-with open('cache.txt', 'wt') as cache_file:
+def main():
+    with open('cache.txt', 'wt') as cache_file:
 
-    for fasta_fp in (line.strip() for line in sys.stdin.readlines()):
-        cache_file.write(fasta_fp)
-        cache_file.write('\n')
-
-        #_, fasta_filename = os.path.split(fasta_fp)
-
-        weight = 0.0
-        t0 = time.time()
-        for record in SeqIO.parse(fasta_fp, format='fasta'):
-            n = len(record.seq)
-            weight += n ** 2
-            cache_file.write(str(n))
-            cache_file.write('\t')
-            cache_file.write(record.id)
+        for fasta_fp in (line.strip() for line in sys.stdin.readlines()):
+            cache_file.write(fasta_fp)
             cache_file.write('\n')
-        cache_file.write('\n')
 
-        print('parsed file {} in {:5.2f}s'.format(fasta_fp, time.time()-t0))
-        print('  weight is {}'.format(round(weight)))
+            #_, fasta_filename = os.path.split(fasta_fp)
 
-        sys.stdout.write('{},{}\n'.format(round(weight), fasta_fp))
+            weight = 0.0
+            t0 = time.time()
+            for record in SeqIO.parse(fasta_fp, format='fasta'):
+                n = len(record.seq)
+                weight += n ** 2
+                cache_file.write(str(n))
+                cache_file.write('\t')
+                cache_file.write(record.id)
+                cache_file.write('\n')
+            cache_file.write('\n')
+
+            weight /= 100000.0
+
+            print('parsed file {} in {:5.2f}s'.format(fasta_fp, time.time()-t0))
+            print('  weight is {}'.format(round(weight)))
+
+            sys.stdout.write('{},{}\n'.format(round(weight), fasta_fp))
+
+
+if __name__ == '__main__':
+main()
