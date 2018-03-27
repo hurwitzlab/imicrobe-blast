@@ -31,7 +31,6 @@ find ${OHANA_HOT_DATA} \
     -size +0c \
     | sort \
     | uniq \
-    #| singularity exec ${IMG} filter_lines bad-fasta-files.txt \
     | singularity exec ${IMG} pack_file_paths -n ${FILE_GROUPS} --prefix ohana-genes-
 
 #
