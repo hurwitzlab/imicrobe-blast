@@ -76,7 +76,7 @@ def main():
         print('--split-count must be greater than 1')
         quit()
 
-    file_paths = sys.stdin.readlines()
+    file_paths = [line.strip() for line in sys.stdin.readlines()]
     packed_file_lists = make_packed_file_lists(file_paths=file_paths, file_list_count=args.split_count)
 
     # this iterator yields 'aa', 'ab', 'ac', ..., 'zz'
