@@ -100,7 +100,9 @@ setup(
     # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
-            'fasplit=imicrobe.blast.fasplit:main'
+            'fasplit=imicrobe.blast.fasplit:main',
+            'filter_lines=imicrobe.execute.makeblastdb.filter_lines:main',
+            'split_lines=imicrobe.execute.makeblastdb.pack_file_paths:main'
         ],
     },
 )
