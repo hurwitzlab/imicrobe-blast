@@ -101,8 +101,8 @@ setup(
     entry_points={
         'console_scripts': [
             'fasplit=imicrobe.blast.fasplit:main',
-            'filter_lines=imicrobe.execute.makeblastdb.filter_lines:main',
-            'split_lines=imicrobe.execute.makeblastdb.pack_file_paths:main'
+            'filter_lines=imicrobe.blast.blastdb.filter_lines:main',
+            'split_lines=imicrobe.blast.blastdb.pack_file_paths:main'
         ],
     },
 )
