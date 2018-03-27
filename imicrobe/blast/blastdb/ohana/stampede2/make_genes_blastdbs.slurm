@@ -28,7 +28,7 @@ mkdir -p $BLAST_DB_OUTPUT
 find ${OHANA_HOT_DATA} \
     -type f \
     -regextype posix-egrep \
-    -regex ".+\.${OHANA_DATA_TYPE}\.fna$" \
+    -regex ".+${OHANA_DATA_TYPE}\.fna$" \
     -size +0c \
     | sort \
     | uniq \
