@@ -14,9 +14,13 @@ OUT_DIR="$SCRATCH/imicrobe-blast/test"
 [[ -d "$OUT_DIR" ]] && rm -rf "$OUT_DIR"
 
 # these files are under 1MB
-#DATA_DIR=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects/37/samples
-#sh run.sh -q "$DATA_DIR/739/ICOMM_SMPL_LTERSTATION1_REPLICATION1.fa" -q "$DATA_DIR/740/ICOMM_SMPL_LTERSTATION1_REPLICATION2.fa" -o $OUT_DIR
+DATA_DIR=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects/37/samples
+sh run.sh -q "$DATA_DIR/739/ICOMM_SMPL_LTERSTATION1_REPLICATION1.fa" -q "$DATA_DIR/740/ICOMM_SMPL_LTERSTATION1_REPLICATION2.fa" -o $OUT_DIR
+
+# these files are about 31MB and 22MB
+#DATA_DIR=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects/94/samples
+#sh run.sh -q "$DATA_DIR/1570/CAM_SMPL_002229.fa" -q "$DATA_DIR/1569/CAM_SMPL_002228.fa" -o $OUT_DIR
 
 # these files are over 1.6GB
-DATA_DIR=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects/263/samples/
-sh run.sh -q "$DATA_DIR/5199/HOT227_1_0500m-readpool.fa" -q "$DATA_DIR/5197/HOT227_1_0075m-readpool.fa" -o "$OUT_DIR/large"
+#DATA_DIR=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects/263/samples/
+#sh run.sh -q "$DATA_DIR/5199/HOT227_1_0500m-readpool.fa" -q "$DATA_DIR/5197/HOT227_1_0075m-readpool.fa" -o "$OUT_DIR/large"
