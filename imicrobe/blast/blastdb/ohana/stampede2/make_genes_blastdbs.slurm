@@ -24,7 +24,7 @@ export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24/ge
 
 mkdir -p $BLAST_DB_OUTPUT
 
-find ${IMICROBE_PROJECTS} \
+find ${OHANA_HOT_DATA} \
     -type f \
     -regextype posix-egrep \
     -regex ".+\.genes\.fna$" \
