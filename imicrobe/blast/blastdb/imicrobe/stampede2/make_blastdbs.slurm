@@ -53,4 +53,4 @@ export LAUNCHER_PPN=${FILE_GROUPS}
 export LAUNCHER_SCHEDULER=dynamic
 
 export LAUNCHER_JOB_FILE=jobs${FILE_GROUPS}.launcher
-##$LAUNCHER_DIR/paramrun
+$LAUNCHER_DIR/paramrun
