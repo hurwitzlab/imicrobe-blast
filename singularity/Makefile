@@ -20,7 +20,7 @@ scp:
 	scp $(IMAGE_NAME) stampede:/work/03137/kyclark/$(APP)/stampede
 
 iput:
-	iput $(IMAGE_NAME)
+	iput -f $(IMAGE_NAME)
 
 iget:
-	iget $(IMAGE_NAME)
+	iget -f $(IMAGE_NAME)
