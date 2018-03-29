@@ -106,7 +106,7 @@ setup(
             'fasplit=imicrobe.blast.fasplit:main',
             'filter_lines=imicrobe.blast.blastdb.filter_lines:main',
             'calculate_file_weights=imicrobe.blast.blastdb.calculate_file_weights:main',
-            'build_seq_db=imicrobe.blast.blastdb.build_sq_db',
+            'build_seq_db=imicrobe.blast.blastdb.build_sq_db:main',
             'pack_file_paths=imicrobe.blast.blastdb.pack_file_paths:main'
         ],
     },
