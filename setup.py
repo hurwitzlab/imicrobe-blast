@@ -72,7 +72,8 @@ setup(
     install_requires=[
         'orminator',
         'biopython',
-        'numpy'
+        'numpy',
+        'sqlalchemy'
     ],
 
     # List additional groups of dependencies here (e.g. development
