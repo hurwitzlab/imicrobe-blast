@@ -83,11 +83,10 @@ def build_seq_db(fasta_glob, db_uri, max_workers):
                         fasta_seq.fasta_file = fasta_file
                         db_session.add(fasta_seq)
 
-
             except Exception as exc:
                 bad.append((fasta_fp, exc))
             else:
-                good.append((fasta_fp, read_count, t))
+                good.append((fasta_fp, seq_id_to_seq_length, t))
 
         print('\n{} valid FASTA file(s)\n'.format(len(good)))
 
@@ -103,18 +102,18 @@ def parse_fasta(fasta_fp):
     t0 = time.time()
     alphabet = set(IUPAC.ambiguous_dna.letters)
     seq_id_to_seq_length = {}
-    for record in SeqIO.parse(fasta_fp, format='fasta', alphabet=IUPAC.ambiguous_dna):
+    for r, record in enumerate(SeqIO.parse(fasta_fp, format='fasta', alphabet=IUPAC.ambiguous_dna)):
         seq_letters = set(str(record.seq).upper())
 
         if len(record.seq) == 0:
-            msg = '{}: Record {} has 0-length sequence\nid: {}'.format(fasta_fp, read_count, record.id)
+            msg = '{}: Record {} has 0-length sequence\nid: {}'.format(fasta_fp, r+1, record.id)
             raise Exception(msg)
         else:
             # all letters in record.seq must be in alphabet, but not all letters in alphabet must in record.seq
             if len(seq_letters.difference(alphabet)) == 0:
                 seq_id_to_seq_length[record.id] = len(record.seq)
             else:
-                msg ='{}: Failed to parse sequence {}\nid: {}\nsequence: {}'.format(fasta_fp, read_count, record.id, record.seq[:1000])
+                msg = '{}: Failed to parse sequence {}\nid: {}\nsequence: {}'.format(fasta_fp, r+1, record.id, record.seq[:1000])
                 raise Exception(msg)
 
     if len(seq_id_to_seq_length) == 0:
