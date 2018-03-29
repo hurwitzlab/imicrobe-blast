@@ -18,16 +18,12 @@ import sys
 import time
 
 from Bio import SeqIO
-from Bio import Alphabet
 from Bio.Alphabet import IUPAC
 
-from sqlalchemy import Column, String
-from sqlalchemy import create_engine
-
+from sqlalchemy import Column, Integer, String, ForeignKeyConstraint
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 
-from ormniator import session_from_uri
+from orminator import session_manager_from_db_uri
 
 
 Base = declarative_base()
@@ -43,18 +39,18 @@ class FastaFile(Base):
 
 class FastaSequence(Base):
     __tablename__ = 'sequence'
+    __table_args__ = (ForeignKeyConstraint(('fasta_file_id',), ('fasta_file.id', ), ))
 
     id = Column(String, primary_key=True)
 
     seq_length = Column(Integer)
-
-    fasta_file_id = Column()
+    fasta_file_id = Column(Integer)
 
 
 def get_args(argv):
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('-i', '--fasta-glob', required=True, help='glob for FASTA files to be validated')
-    arg_parser.add_argument('-d', '--db', required=true, help='file path for sqlite3 database')
+    arg_parser.add_argument('-d', '--db-uri', required=True, help='URI for sqlite3 database')
     arg_parser.add_argument('--max-workers', type=int, default=1, help='number of processes')
 
     args = arg_parser.parse_args(argv)
@@ -67,7 +63,7 @@ def main():
     build_seq_db(**vars(get_args(sys.argv[1:])))
 
 
-def build_seq_db(fasta_glob, db, max_workers):
+def build_seq_db(fasta_glob, db_uri, max_workers):
     fasta_list = glob.glob(fasta_glob, recursive=True)
     print('glob "{}" matched {} files'.format(fasta_glob, len(fasta_list)))
 
@@ -79,7 +75,15 @@ def build_seq_db(fasta_glob, db, max_workers):
             fasta_fp = future_to_fasta_fp[future]
             try:
                 seq_id_to_seq_length, t = future.result()
-                with
+                with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+                    fasta_file = FastaFile(file_path=fasta_fp)
+                    db_session.add(fasta_file)
+                    for seq_id, seq_length in seq_id_to_seq_length.items():
+                        fasta_seq = FastaSequence(id=seq_id, seq_length=seq_length)
+                        fasta_seq.fasta_file = fasta_file
+                        db_session.add(fasta_seq)
+
+
             except Exception as exc:
                 bad.append((fasta_fp, exc))
             else:
