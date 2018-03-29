@@ -20,7 +20,7 @@ import time
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 
-from sqlalchemy import Column, Integer, String, ForeignKeyConstraint
+from sqlalchemy import Column, Integer, String, ForeignKeyConstraint, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 
 from orminator import session_manager_from_db_uri
@@ -66,6 +66,10 @@ def main():
 def build_seq_db(fasta_glob, db_uri, max_workers):
     fasta_list = glob.glob(fasta_glob, recursive=True)
     print('glob "{}" matched {} files'.format(fasta_glob, len(fasta_list)))
+
+    print('SQLite db URL: {}'.format(db_uri))
+    engine = create_engine(db_uri, echo=False)
+    Base.metadata.create_all(engine)
 
     good = []
     bad = []
