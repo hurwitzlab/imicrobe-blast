@@ -39,7 +39,7 @@ class FastaFile(Base):
 
 class FastaSequence(Base):
     __tablename__ = 'sequence'
-    __table_args__ = (ForeignKeyConstraint(('fasta_file_id',), ('fasta_file.id', ), ))
+    __table_args__ = (ForeignKeyConstraint(('fasta_file_id',), ('fasta_file.id', )), )
 
     id = Column(String, primary_key=True)
 
