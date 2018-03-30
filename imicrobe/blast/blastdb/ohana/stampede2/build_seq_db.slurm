@@ -13,16 +13,16 @@
 module load tacc-singularity
 
 IMG=$WORK/jklynch/project/imicrobe/apps/imicrobe-blast/singularity/imicrobe-blast-0.0.5.img
-OHANA_HOT_DATA=$WORK/../imicrobe/iplantc.org/data/ohana/HOT/HOT224*
+OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT/HOT224*
 
-export BLAST_DB_OUTPUT=$WORK/../imicrobe/iplantc.org/data/ohana/blast
+export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast
 
 # delete the old database if there is one
 rm -f ${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite
 
 singularity exec $IMG build_seq_db \
     --fasta-globs ${OHANA_HOT_DATA}/**/contigs.fa,${OHANA_HOT_DATA}/**/genes.fna,${OHANA_HOT_DATA}/**/proteins.faa \
-    --db-uri sqlite://${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite \
+    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite \
     --valid-files-fp ohana_valid_fasta_files.txt \
     --invalid-files-fp ohana_invalide_fasta_files.txt \
     --max-workers 48
