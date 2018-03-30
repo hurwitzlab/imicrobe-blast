@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#!/bin/bash
 
 #SBATCH -A iPlant-Collabs
 #SBATCH -N 1
