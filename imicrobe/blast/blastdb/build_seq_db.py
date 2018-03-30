@@ -159,7 +159,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
 def parse_fasta(fasta_fp):
     t0 = time.time()
     alphabet_dna = set(IUPAC.ambiguous_dna.letters)
-    alphabet_protein = set(IUPAC.protein.letters)
+    alphabet_protein = set(IUPAC.extended_protein.letters)
     # Ohana protein sequences often end in '*'
     alphabet_protein.add('*')
     seq_id_to_seq_length = {}
