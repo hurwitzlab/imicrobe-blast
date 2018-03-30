@@ -145,7 +145,8 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
 
 def parse_fasta(fasta_fp):
     t0 = time.time()
-    alphabet = set(IUPAC.ambiguous_dna.letters)
+    alphabet_dna = set(IUPAC.ambiguous_dna.letters)
+    alphabet_protein = set(IUPAC.protein.letters)
     seq_id_to_seq_length = {}
     for r, record in enumerate(SeqIO.parse(fasta_fp, format='fasta', alphabet=IUPAC.ambiguous_dna)):
         seq_letters = set(str(record.seq).upper())
@@ -154,8 +155,8 @@ def parse_fasta(fasta_fp):
             msg = '{}: Record {} has 0-length sequence\nid: {}'.format(fasta_fp, r+1, record.id)
             raise FastaParseException(msg)
         else:
-            # all letters in record.seq must be in alphabet, but not all letters in alphabet must in record.seq
-            if len(seq_letters.difference(alphabet)) == 0:
+            # all letters in record.seq must be in alphabet(s), but not all letters in alphabet(s) must in record.seq
+            if len(seq_letters.difference(alphabet_dna)) == 0 or len(seq_letters.difference(alphabet_protein)) == 0:
                 seq_id_to_seq_length[record.id] = len(record.seq)
             else:
                 msg = '{}: Failed to parse sequence {}\nid: {}\nsequence: {}'.format(fasta_fp, r+1, record.id, record.seq[:1000])
