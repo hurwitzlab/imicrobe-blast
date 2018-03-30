@@ -110,12 +110,14 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
             try:
                 seq_id_to_seq_length, t = future.result()
                 with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+                    t0 = time.time()
                     fasta_file = FastaFile(file_path=fasta_fp)
                     db_session.add(fasta_file)
                     for seq_id, seq_length in seq_id_to_seq_length.items():
                         fasta_seq = FastaSequence(seq_id=seq_id, seq_length=seq_length)
                         fasta_seq.fasta_file = fasta_file
                         db_session.add(fasta_seq)
+                    print('{:8.2f}s to insert {} sequences from "{}"'.format(time.time()-t0, len(seq_id_to_seq_length), fasta_fp))
 
             except FastaParseException as exc:
                 bad.append((fasta_fp, exc))
