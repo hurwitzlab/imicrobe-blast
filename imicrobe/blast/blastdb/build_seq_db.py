@@ -90,11 +90,18 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
 
     print('SQLite db URL: {}'.format(db_uri))
     engine = create_engine(db_uri, echo=False)
-    Base.metadata.create_all(engine)
+    Base.metadata.create_all(engine, checkfirst=True)
 
     good = []
     bad = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+        """Build a dict of future -> FASTA file path
+        {
+            future_1: '/work/05066/imicrobe/iplantc.org/data/ohana/HOT/HOT224_1_0025m/proteins.faa',
+            future_2: '/work/05066/imicrobe/iplantc.org/data/ohana/HOT/HOT224_1_0050m/proteins.faa',
+            ...
+        }
+        """
         future_to_fasta_fp = {executor.submit(parse_fasta, fasta_fp): fasta_fp for fasta_fp in fasta_list}
         for future in concurrent.futures.as_completed(future_to_fasta_fp):
             fasta_fp = future_to_fasta_fp[future]
@@ -120,11 +127,17 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
         valid_file.write('\n'.join(sorted_good))
         valid_file.write('\n')
 
-    sorted_bad = sorted([fasta_fp for (fasta_fp, _) in bad])
+    sorted_bad = sorted(bad)
     print('{} invalid FASTA file(s)'.format(len(sorted_bad)))
     with open(invalid_files_fp, 'wt') as invalid_file:
-        invalid_file.write('\n'.join(sorted_bad))
-        invalid_file.write('\n')
+        for fp, exc in sorted_bad:
+            #invalid_file.write('\n'.join(sorted_bad))
+            invalid_file.write(fp)
+            invalid_file.write('\n')
+            sys.stdout.write(fp)
+            sys.stdout.write('\n')
+            sys.stdout.write(str(exc))
+            sys.stdout.write('\n')
 
     # what is in the db?
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
