@@ -147,6 +147,8 @@ def parse_fasta(fasta_fp):
     t0 = time.time()
     alphabet_dna = set(IUPAC.ambiguous_dna.letters)
     alphabet_protein = set(IUPAC.protein.letters)
+    # Ohana protein sequences often end in '*'
+    alphabet_protein.add('*')
     seq_id_to_seq_length = {}
     for r, record in enumerate(SeqIO.parse(fasta_fp, format='fasta', alphabet=IUPAC.ambiguous_dna)):
         seq_letters = set(str(record.seq).upper())
