@@ -23,7 +23,7 @@ import time
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 
-from sqlalchemy import Column, Integer, String, ForeignKeyConstraint, create_engine
+from sqlalchemy import Column, Integer, String, ForeignKeyConstraint, UniqueConstraint, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -47,11 +47,13 @@ class FastaSequence(Base):
 
     id = Column(Integer, primary_key=True)
 
-    seq_id = Column(String, unique=True)
+    seq_id = Column(String)
     seq_length = Column(Integer)
     fasta_file_id = Column(Integer)
 
     fasta_file = relationship('FastaFile')
+
+    UniqueConstraint('seq_id', 'fasta_file_id', name='unique_sequence_within_file')
 
 
 class FastaParseException(BaseException):
