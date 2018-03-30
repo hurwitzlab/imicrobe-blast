@@ -111,31 +111,36 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
             except FastaParseException as exc:
                 bad.append((fasta_fp, exc))
             else:
+                print('{:8.2f}s to parse "{}"'.format(t, fasta_fp))
                 good.append((fasta_fp, seq_id_to_seq_length, t))
 
     sorted_good = sorted([fasta_fp for fasta_fp, *_ in good])
-    print('\n{} valid FASTA file(s)\n'.format(len(sorted_good)))
+    print('\n{} valid FASTA file(s)'.format(len(sorted_good)))
     with open(valid_files_fp, 'wt') as valid_file:
         valid_file.write('\n'.join(sorted_good))
         valid_file.write('\n')
 
     sorted_bad = sorted([fasta_fp for (fasta_fp, _) in bad])
-    print('{} invalid FASTA file(s):'.format(len(sorted_bad)))
+    print('{} invalid FASTA file(s)'.format(len(sorted_bad)))
     with open(invalid_files_fp, 'wt') as invalid_file:
         invalid_file.write('\n'.join(sorted_bad))
         invalid_file.write('\n')
 
     # what is in the db?
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
-        for f in db_session.query(FastaFile).all():
-            print('FASTA file id: {}'.format(f.id))
-            print('FASTA file path: {}'.format(f.file_path))
+        file_count = db_session.query(FastaFile).count()
+        print('inserted {} FASTA file(s)'.format(file_count))
+        #for f in db_session.query(FastaFile).all():
+        #    print('FASTA file id: {}'.format(f.id))
+        #    print('FASTA file path: {}'.format(f.file_path))
 
-        for s in db_session.query(FastaSequence).all():
-            print('  sequence id: {}'.format(s.id))
-            print('  sequence FASTA id: {}'.format(s.seq_id))
-            print('  sequence length: {}'.format(s.seq_length))
-            print('  sequence FASTA file id: {}'.format(s.fasta_file_id))
+        sequence_count = db_session.query(FastaSequence).count()
+        print('inserted {} sequence(s)'.format(sequence_count))
+        #for s in db_session.query(FastaSequence).all():
+        #    print('  sequence id: {}'.format(s.id))
+        #    print('  sequence FASTA id: {}'.format(s.seq_id))
+        #    print('  sequence length: {}'.format(s.seq_length))
+        #    print('  sequence FASTA file id: {}'.format(s.fasta_file_id))
 
 
 def parse_fasta(fasta_fp):
