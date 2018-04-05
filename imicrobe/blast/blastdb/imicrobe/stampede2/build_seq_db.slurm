@@ -18,7 +18,7 @@ IMICROBE_DATA=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects
 export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/imicrobe/blast
 
 # delete the old database if there is one
-rm -f ${BLAST_DB_OUTPUT}/imicrobe_seq_db.sqlite
+##rm -f ${BLAST_DB_OUTPUT}/imicrobe_seq_db.sqlite
 
 singularity exec $IMG build_seq_db \
     --fasta-globs ${IMICROBE_DATA}/**/*.fa,${IMICROBE_DATA}/**/*.fna,${IMICROBE_DATA}/**/*.fasta \
