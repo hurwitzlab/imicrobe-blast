@@ -94,6 +94,17 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     engine = create_engine(db_uri, echo=False)
     Base.metadata.create_all(engine, checkfirst=True)
 
+    with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+        fasta_fp_in_db = {fasta_fp for fasta_fp in db_session.query(FastaFile).all()}
+        all_fasta_fp = set(fasta_list)
+        fasta_fp_not_in_db = all_fasta_fp.difference(fasta_fp_in_db)
+
+    print('{} FASTA files found'.format(len(fasta_list)))
+    print('{} FASTA file paths in database'.format(len(fasta_fp_in_db)))
+    print('{} FASTA file paths not in database'.format(len(fasta_fp_not_in_db)))
+
+    quit()
+
     good = []
     bad = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
