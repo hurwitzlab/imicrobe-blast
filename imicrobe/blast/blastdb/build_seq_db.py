@@ -210,6 +210,8 @@ def get_sequence_weights(db_uri):
       }
     """
 
+    print('reading files and read lengths from {}'.format(db_uri))
+    t0 = time.time()
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
         file_path_to_read_lengths = {
             f.file_path: tuple([
@@ -217,6 +219,7 @@ def get_sequence_weights(db_uri):
                 for s
                 in db_session.query(FastaSequence).filter(FastaSequence.fasta_file_id == f.id).all()])
             for f in db_session.query(FastaFile).all()}
+    print('done in {:5.2f}s'.format(time.time()-t0))
 
     return file_path_to_read_lengths
 
