@@ -216,7 +216,7 @@ def get_sequence_weights(db_uri):
                 s.seq_length
                 for s
                 in db_session.query(FastaSequence).filter(FastaSequence.fasta_file_id == f.id).all()])
-            for f in db_session.query(FastaFile).al()}
+            for f in db_session.query(FastaFile).all()}
 
     return file_path_to_read_lengths
 
