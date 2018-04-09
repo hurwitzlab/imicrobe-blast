@@ -26,4 +26,3 @@ singularity exec $IMG build_seq_db \
     --valid-files-fp ohana_valid_fasta_files.txt \
     --invalid-files-fp ohana_invalid_fasta_files.txt \
     --max-workers 48
-

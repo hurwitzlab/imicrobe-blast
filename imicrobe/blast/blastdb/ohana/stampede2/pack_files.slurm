@@ -19,7 +19,7 @@ OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT
 
 export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast
 
-singularity exec $IMG pack_files \
+singularity exec $IMG pack_file_paths \
     --split-count 24 \
     --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite \
     --prefix ohana-
