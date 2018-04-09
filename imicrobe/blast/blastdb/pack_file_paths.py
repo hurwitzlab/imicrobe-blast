@@ -3,17 +3,19 @@
 import argparse
 import itertools
 import operator
-import os.path
 import pprint
-import sys
 
 import numpy as np
+
+from imicrobe.blast.blastdb.build_seq_db import get_sequence_weights
 
 
 def get_args():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument('-n', '--split-count', type=int, required=True,
                             help='Number of files into which stdin will be split')
+    arg_parser.add_argument('-d', '--db-uri', required=True,
+                            help='URI for sqlite3 database')
     arg_parser.add_argument('--prefix', required=True,
                             help='File path prefix for split files')
 
@@ -77,10 +79,20 @@ def main():
         print('--split-count must be greater than 1')
         quit()
 
-    # file_paths looks like this:
-    #   [(1234, /path/to/file), (5678, /path/to/file), ..., (91234, /path/to/file)]
-    file_paths = [line.strip().split(',') for line in sys.stdin.readlines()]
-    packed_file_lists = make_packed_file_lists(file_paths=file_paths, file_list_count=args.split_count)
+    # the first implementation read file paths from standard input
+    ## file_paths looks like this:
+    ##   [(1234, /path/to/file), (5678, /path/to/file), ..., (91234, /path/to/file)]
+    #file_paths = [line.strip().split(',') for line in sys.stdin.readlines()]
+    #packed_file_lists = make_packed_file_lists(file_paths=file_paths, file_list_count=args.split_count)
+
+    file_paths_to_sequence_lengths = get_sequence_weights(args.db_uri)
+    packed_file_lists = make_packed_file_lists(
+        file_size_path_list=tuple([
+            (np.sum([(n**2)/1000 for n in read_length_list]), file_path)
+            for file_path, read_length_list
+            in file_paths_to_sequence_lengths.items()
+        ]),
+        file_list_count=args.split_count)
 
     # this iterator yields 'aa', 'ab', 'ac', ..., 'zz'
     group_id_iter = itertools.starmap(

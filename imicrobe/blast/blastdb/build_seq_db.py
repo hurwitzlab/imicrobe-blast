@@ -200,5 +200,26 @@ def parse_fasta(fasta_fp):
     return seq_id_to_seq_length, t
 
 
+def get_sequence_weights(db_uri):
+    """
+    Return a dictionary of file path to sequence read lengths:
+      {
+        '/path/to/file1.fasta': (100, 200, 50, ...),
+        '/path/to/file2.fasta': (150, 250, 100, ...),
+        ...
+      }
+    """
+
+    with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+        file_path_to_read_lengths = {
+            f.file_path: tuple([
+                s.seq_length
+                for s
+                in db_session.query(FastaSequence).filter(FastaSequence.fasta_file_id == f.id).all()])
+            for f in db_session.query(FastaFile).al()}
+
+    return file_path_to_read_lengths
+
+
 if __name__ == '__main__':
     main()
