@@ -5,7 +5,6 @@ imicrobe_blast.egg-info
 
 bin
 *.xml
-*.txt
 *.tgz
 *.out
 *.param
