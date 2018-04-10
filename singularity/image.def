@@ -16,7 +16,7 @@ From: ubuntu:latest
     pip3 install --upgrade pip
 
     cd /imicrobe-blast
-    pip3 install -r requirements.txt
+    pip3 install -r requirements-container.txt
 
     mkdir /home1
     mkdir /work
