@@ -1,7 +1,11 @@
 .idea/*
+__pycache__
+imicrobe_blast.egg-info
+.ipynb_checkpoints
 
 bin
 *.xml
+*.txt
 *.tgz
 *.out
 *.param
