@@ -103,7 +103,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     print('{} FASTA file paths in database'.format(len(fasta_fp_in_db)))
     print('{} FASTA file paths not in database'.format(len(fasta_fp_not_in_db)))
 
-    quit()
+    #quit()
 
     good = []
     bad = []
