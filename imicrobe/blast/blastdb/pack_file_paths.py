@@ -92,7 +92,7 @@ def main():
     t0 = time.time()
     #file_paths_to_sequence_lengths = get_sequence_weights(args.db_uri)
     #print('{:5.2f}s for get_sequence_weights'.format(time.time()-t0))
-    file_paths_to_sequence_lengths = get_sequence_weights_speedy(args.db_uri, max_workers=2)
+    file_paths_to_sequence_lengths = get_sequence_weights_speedy(args.db_uri, max_workers=args.max_workers)
     print('{:5.2f}s for get_sequence_weights_speedy'.format(time.time()-t0))
 
     t0 = time.time()
