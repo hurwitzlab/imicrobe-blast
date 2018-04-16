@@ -13,7 +13,8 @@ From: ubuntu:latest
     apt-get install -y git locales ncbi-blast+ python3 python3-pip
     locale-gen en_US.UTF-8
 
-    pip3 install --upgrade pip
+    ## this caused failure upgrading to pip 10.0
+    ##pip3 install --upgrade pip
 
     cd /imicrobe-blast
     pip3 install -r requirements-container.txt
