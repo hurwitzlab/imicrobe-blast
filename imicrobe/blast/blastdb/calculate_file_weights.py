@@ -11,7 +11,6 @@ file_name.fa.catalog:
 Then calculate the weight for each file and pass weight and file path on
 to standard output.
 """
-import glob
 import sys
 import time
 
@@ -47,4 +46,4 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+    main()
