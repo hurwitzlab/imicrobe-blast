@@ -33,7 +33,7 @@ mkdir -p $BLAST_DB_OUTPUT
 #    | uniq \
 singularity exec ${IMG} pack_file_paths \
     -n ${FILE_GROUPS} \
-    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_little_seq_db.sqlite \
+    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite \
     --prefix ohana-${OHANA_DATA_TYPE}- \
     --max-workers 48
 
