@@ -20,23 +20,28 @@ OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT
 OHANA_DATA_TYPE=genes
 FILE_GROUPS=24
 
-export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24
+export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast
 
 mkdir -p $BLAST_DB_OUTPUT
 
-find ${OHANA_HOT_DATA} \
-    -type f \
-    -regextype posix-egrep \
-    -regex ".+${OHANA_DATA_TYPE}\.fna$" \
-    -size +0c \
-    | sort \
-    | uniq \
-    | singularity exec ${IMG} calculate_file_weights \
-    | singularity exec ${IMG} pack_file_paths -n ${FILE_GROUPS} --prefix ohana-${OHANA_DATA_TYPE}-
+#find ${OHANA_HOT_DATA} \
+#    -type f \
+#    -regextype posix-egrep \
+#    -regex ".+${OHANA_DATA_TYPE}\.fna$" \
+#    -size +0c \
+#    | sort \
+#    | uniq \
+singularity exec ${IMG} pack_file_paths \
+    -n ${FILE_GROUPS} \
+    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_little_seq_db.sqlite \
+    --prefix ohana-${OHANA_DATA_TYPE}- \
+    --max-workers 48
 
 #
 # go!
 #
+
+export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24
 
 # no need to change these
 export LAUNCHER_PLUGIN_DIR=$LAUNCHER_DIR/plugins

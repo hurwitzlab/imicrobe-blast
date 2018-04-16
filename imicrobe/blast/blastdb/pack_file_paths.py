@@ -4,10 +4,11 @@ import argparse
 import itertools
 import operator
 import pprint
+import time
 
 import numpy as np
 
-from imicrobe.blast.blastdb.build_seq_db import get_sequence_weights
+from imicrobe.blast.blastdb.build_seq_db import get_sequence_weights, get_sequence_weights_speedy
 
 
 def get_args():
@@ -18,6 +19,8 @@ def get_args():
                             help='URI for sqlite3 database')
     arg_parser.add_argument('--prefix', required=True,
                             help='File path prefix for split files')
+    arg_parser.add_argument('--max-workers', type=int, default=1,
+                            help='number of processes')
 
     return arg_parser.parse_args()
 
@@ -59,6 +62,7 @@ def make_packed_file_lists(file_size_path_list, file_list_count):
 
     #file_size_path_list = [(os.path.getsize(fp), fp) for fp in file_paths]
     print('first 5 files:\n{}'.format(pprint.pformat(file_size_path_list[:5])))
+    print('file weights:\n{}'.format(pprint.pformat(file_size_path_list)))
 
     packed_file_lists = pack_file_lists(file_size_path_list, bin_count=file_list_count)
 
@@ -85,7 +89,13 @@ def main():
     #file_paths = [line.strip().split(',') for line in sys.stdin.readlines()]
     #packed_file_lists = make_packed_file_lists(file_paths=file_paths, file_list_count=args.split_count)
 
-    file_paths_to_sequence_lengths = get_sequence_weights(args.db_uri)
+    t0 = time.time()
+    #file_paths_to_sequence_lengths = get_sequence_weights(args.db_uri)
+    #print('{:5.2f}s for get_sequence_weights'.format(time.time()-t0))
+    file_paths_to_sequence_lengths = get_sequence_weights_speedy(args.db_uri, max_workers=2)
+    print('{:5.2f}s for get_sequence_weights_speedy'.format(time.time()-t0))
+
+    t0 = time.time()
     packed_file_lists = make_packed_file_lists(
         file_size_path_list=tuple([
             (np.sum([(n**2)/1000 for n in read_length_list]), file_path)
@@ -93,6 +103,7 @@ def main():
             in file_paths_to_sequence_lengths.items()
         ]),
         file_list_count=args.split_count)
+    print('{:5.2f}s for make_packed_file_lists done'.format(time.time()-t0))
 
     # this iterator yields 'aa', 'ab', 'ac', ..., 'zz'
     group_id_iter = itertools.starmap(
