@@ -75,7 +75,6 @@ def make_packed_file_lists(file_size_path_list, file_list_count):
     print('{} file paths will be packed into {} lists'.format(
         len(file_size_path_list), file_list_count))
 
-    #file_size_path_list = [(os.path.getsize(fp), fp) for fp in file_paths]
     print('first 5 files:\n{}'.format(pprint.pformat(file_size_path_list[:5])))
     print('file weights:\n{}'.format(pprint.pformat(file_size_path_list)))
 
@@ -85,13 +84,6 @@ def make_packed_file_lists(file_size_path_list, file_list_count):
         print('weight: {:8.1f}\n\t{}'.format(
             packed_files['weight'],
             '\n\t'.join(['{:8.1f} {}'.format(weight, name) for (weight, name) in packed_files['contents']])))
-
-    # sort by file path
-    #sorted_packed_file_lists = [
-    #    sorted([(fp, weight) for weight, fp in packed_file_list])
-    #    for packed_file_list
-    #    in packed_file_lists
-    #]
 
     return packed_file_lists
 
