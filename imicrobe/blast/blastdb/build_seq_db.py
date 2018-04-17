@@ -94,6 +94,8 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     engine = create_engine(db_uri, echo=False)
     Base.metadata.create_all(engine, checkfirst=True)
 
+    # get a list of all FASTA files already in the database
+    # so we will not load them again
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
         fasta_fp_in_db = {fasta_fp for fasta_fp in db_session.query(FastaFile).all()}
         all_fasta_fp = set(fasta_list)
