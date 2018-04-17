@@ -3,9 +3,9 @@
 #SBATCH -A iPlant-Collabs
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -t 48:00:00
+#SBATCH -t 06:00:00
 #SBATCH -p skx-normal
-#SBATCH -J make-ohana-seq-db
+#SBATCH -J make-ohana-genes-seq-db
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --mail-user jklynch@email.arizona.edu
 
@@ -18,11 +18,11 @@ OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT
 export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast
 
 # delete the old database if there is one
-rm -f ${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite
+rm -f ${BLAST_DB_OUTPUT}/ohana_genes_seq_db.sqlite
 
 singularity exec $IMG build_seq_db \
-    --fasta-globs ${OHANA_HOT_DATA}/**/contigs.fa,${OHANA_HOT_DATA}/**/genes.fna,${OHANA_HOT_DATA}/**/proteins.faa \
-    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite \
-    --valid-files-fp ohana_valid_fasta_files.txt \
-    --invalid-files-fp ohana_invalid_fasta_files.txt \
+    --fasta-globs ${OHANA_HOT_DATA}/**/genes.fna \
+    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_genes_seq_db.sqlite \
+    --valid-files-fp ohana_genes_valid_fasta_files.txt \
+    --invalid-files-fp ohana_genes_invalid_fasta_files.txt \
     --max-workers 48
