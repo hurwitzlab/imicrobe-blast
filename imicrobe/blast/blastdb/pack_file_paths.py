@@ -1,4 +1,8 @@
 """
+Testing:
+
+(imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ time pack_file_paths -d sqlite:///ohana_little_seq_db.sqlite -n 2 --prefix bbb --max-workers 2
+
 """
 import argparse
 import itertools
@@ -8,7 +12,7 @@ import time
 
 import numpy as np
 
-from imicrobe.blast.blastdb.build_seq_db import get_sequence_weights, get_sequence_weights_speedy
+from imicrobe.blast.blastdb.build_seq_db import get_sequence_weights_speedy
 
 
 def get_args():
@@ -41,21 +45,32 @@ def pack_file_lists(file_list, bin_count):
     target_bin_weight = np.round(np.sum([weight for weight, name in file_list]) / bin_count)
     print('the target bin weight is {:8.1f}'.format(target_bin_weight))
 
-    bin_list = [dict((('bin_weight', 0.0), ('bin_contents', []))) for _ in range(bin_count)]
+    bin_list = [dict((('weight', 0.0), ('contents', []))) for _ in range(bin_count)]
 
     for (weight, name) in sorted(file_list, reverse=True):
-        bin_list[0]['bin_contents'].append((weight, name))
-        bin_list[0]['bin_weight'] += weight
-        bin_list.sort(key=lambda bin_: bin_['bin_weight'])
+        bin_list[0]['contents'].append((weight, name))
+        bin_list[0]['weight'] += weight
+        bin_list.sort(key=lambda bin_: bin_['weight'])
 
     print('minimum bin weight: {:8.1f}\nmaximum bin weight: {:8.1f}'.format(
-        bin_list[0]['bin_weight'], bin_list[-1]['bin_weight']))
+        bin_list[0]['weight'], bin_list[-1]['weight']))
 
-    return [bin_['bin_contents'] for bin_ in bin_list]
+    return bin_list
 
 
 def make_packed_file_lists(file_size_path_list, file_list_count):
-    """
+    """Return a list of dictionaries:
+        [
+            {
+                'contents': [('/file/path/1', 123456), ('/file/path/2', 234567), ...],
+                'weight': 2000000
+            },
+            {
+                'contents': [('/file/path/3', 345678), ('/file/path/4', 45678), ...],
+                'weight': 3000000
+            },
+            ...
+        ]
     """
     print('{} file paths will be packed into {} lists'.format(
         len(file_size_path_list), file_list_count))
@@ -65,15 +80,20 @@ def make_packed_file_lists(file_size_path_list, file_list_count):
     print('file weights:\n{}'.format(pprint.pformat(file_size_path_list)))
 
     packed_file_lists = pack_file_lists(file_size_path_list, bin_count=file_list_count)
+    for packed_files in packed_file_lists:
+        print(packed_files)
+        print('weight: {:8.1f}\n\t{}'.format(
+            packed_files['weight'],
+            '\n\t'.join(['{:8.1f} {}'.format(weight, name) for (weight, name) in packed_files['contents']])))
 
-    # remove the file weights and sort by file path
-    sorted_packed_file_lists = [
-        sorted([fp for weight, fp in packed_file_list])
-        for packed_file_list
-        in packed_file_lists
-    ]
+    # sort by file path
+    #sorted_packed_file_lists = [
+    #    sorted([(fp, weight) for weight, fp in packed_file_list])
+    #    for packed_file_list
+    #    in packed_file_lists
+    #]
 
-    return sorted_packed_file_lists
+    return packed_file_lists
 
 
 def main():
@@ -104,6 +124,7 @@ def main():
         ]),
         file_list_count=args.split_count)
     print('{:5.2f}s for make_packed_file_lists done'.format(time.time()-t0))
+    print('packed lists:')
 
     # this iterator yields 'aa', 'ab', 'ac', ..., 'zz'
     group_id_iter = itertools.starmap(
