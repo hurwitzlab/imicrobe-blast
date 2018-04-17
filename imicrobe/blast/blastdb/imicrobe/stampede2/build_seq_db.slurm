@@ -3,12 +3,18 @@
 #SBATCH -A iPlant-Collabs
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -t 48:00:00
+#SBATCH -t 12:00:00
 #SBATCH -p skx-normal
 #SBATCH -J make-imicrobe-seq-db
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --mail-user jklynch@email.arizona.edu
 
+#
+# This script is intended to be run more than once since it has been taking
+# more than 48 hours to build the sequence database for iMicrobe.
+# No changes are required. Just let it run and then run it again until it
+# has nothing to do.
+#
 
 module load tacc-singularity
 
