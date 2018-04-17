@@ -89,6 +89,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
         glob_results = glob.glob(fasta_glob, recursive=True)
         print('glob "{}" matched {} files'.format(fasta_glob, len(glob_results)))
         fasta_list.extend((os.path.abspath(fp) for fp in glob_results))
+    fasta_list.sort()
 
     print('SQLite db URL: {}'.format(db_uri))
     engine = create_engine(db_uri, echo=False)
@@ -97,9 +98,9 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     # get a list of all FASTA files already in the database
     # so we will not load them again
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
-        fasta_fp_in_db = {fasta_fp for fasta_fp in db_session.query(FastaFile).all()}
+        fasta_fp_in_db = {fasta_file.file_path for fasta_file in db_session.query(FastaFile).all()}
         all_fasta_fp = set(fasta_list)
-        fasta_fp_not_in_db = all_fasta_fp.difference(fasta_fp_in_db)
+        fasta_fp_not_in_db = sorted(list(all_fasta_fp.difference(fasta_fp_in_db)))
 
     print('{} FASTA files found'.format(len(fasta_list)))
     print('{} FASTA file paths in database'.format(len(fasta_fp_in_db)))
@@ -117,7 +118,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
             ...
         }
         """
-        future_to_fasta_fp = {executor.submit(parse_fasta, fasta_fp): fasta_fp for fasta_fp in fasta_list}
+        future_to_fasta_fp = {executor.submit(parse_fasta, fasta_fp): fasta_fp for fasta_fp in fasta_fp_not_in_db}
         for future in concurrent.futures.as_completed(future_to_fasta_fp):
             fasta_fp = future_to_fasta_fp[future]
             try:
