@@ -30,7 +30,7 @@ echo "PARAMRUN: ${PARAMRUN}"
 
 export LAUNCHER_WORKDIR="$PWD"
 export LAUNCHER_SCHED=dynamic
-export LAUNCHER_PPN=48
+export LAUNCHER_PPN=24
 
 function lc() {
     wc -l "$1" | awk '{print $1}'
