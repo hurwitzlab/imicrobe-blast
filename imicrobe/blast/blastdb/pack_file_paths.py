@@ -103,12 +103,6 @@ def main():
         print('--split-count must be greater than 1')
         quit()
 
-    # the first implementation read file paths from standard input
-    ## file_paths looks like this:
-    ##   [(1234, /path/to/file), (5678, /path/to/file), ..., (91234, /path/to/file)]
-    #file_paths = [line.strip().split(',') for line in sys.stdin.readlines()]
-    #packed_file_lists = make_packed_file_lists(file_paths=file_paths, file_list_count=args.split_count)
-
     t0 = time.time()
     #file_paths_to_sequence_lengths = get_sequence_weights(args.db_uri)
     #print('{:5.2f}s for get_sequence_weights'.format(time.time()-t0))
@@ -135,7 +129,7 @@ def main():
     for group_id, packed_file_list in zip(group_id_iter, packed_file_lists):
         file_name = args.prefix + group_id
         with open(file_name, 'w') as split_file:
-            split_file.write('\n'.join(packed_file_list))
+            split_file.write('\n'.join([file_path for (file_path, weight) in packed_file_list['contents']]))
 
 
 if __name__ == '__main__':
