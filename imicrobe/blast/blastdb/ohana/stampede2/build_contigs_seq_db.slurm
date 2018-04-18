@@ -22,7 +22,7 @@ rm -f ${BLAST_DB_OUTPUT}/ohana_contigs_seq_db.sqlite
 
 singularity exec $IMG build_seq_db \
     --fasta-globs "${OHANA_HOT_DATA}/**/contigs.fa" \
-    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite \
+    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_contigs_seq_db.sqlite \
     --valid-files-fp ohana_contigs_valid_fasta_files.txt \
     --invalid-files-fp ohana_contigs_invalid_fasta_files.txt \
     --max-workers 48
