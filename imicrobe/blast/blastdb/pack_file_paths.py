@@ -121,7 +121,7 @@ def main():
     for group_id, packed_file_list in zip(group_id_iter, packed_file_lists):
         file_name = args.prefix + group_id
         with open(file_name, 'w') as split_file:
-            split_file.write('\n'.join([file_path for (file_path, weight) in packed_file_list['contents']]))
+            split_file.write('\n'.join([file_path for (weight, file_path) in packed_file_list['contents']]))
 
 
 if __name__ == '__main__':
