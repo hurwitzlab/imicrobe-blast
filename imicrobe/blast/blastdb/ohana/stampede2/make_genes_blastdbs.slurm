@@ -15,24 +15,8 @@ module load tacc-singularity
 module use /scratch/01255/siliu/modulefiles
 module load launcher/3.2
 
-IMG=../../../../../singularity/imicrobe-blast-0.0.5.img
+IMG=$WORK/jklynch/project/imicrobe/apps/imicrobe-blast/singularity/imicrobe-blast-0.0.5.img
 OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT
-OHANA_DATA_TYPE=genes
-FILE_GROUPS=24
-
-export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast
-
-mkdir -p $BLAST_DB_OUTPUT
-
-singularity exec ${IMG} pack_file_paths \
-    -n ${FILE_GROUPS} \
-    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite \
-    --prefix ohana-${OHANA_DATA_TYPE}- \
-    --max-workers 48
-
-#
-# go!
-#
 
 export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24
 
@@ -50,5 +34,5 @@ export LAUNCHER_PPN=${FILE_GROUPS}
 
 export LAUNCHER_SCHEDULER=dynamic
 
-export LAUNCHER_JOB_FILE=jobs${FILE_GROUPS}.${OHANA_DATA_TYPE}.launcher
+export LAUNCHER_JOB_FILE=jobs${FILE_GROUPS}.ohana.genes.launcher
 $LAUNCHER_DIR/paramrun
