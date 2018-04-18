@@ -110,7 +110,7 @@ def main():
         ]),
         file_list_count=args.split_count)
     print('{:5.2f}s for make_packed_file_lists done'.format(time.time()-t0))
-    print('packed lists:')
+    #print('packed lists:')
 
     # this iterator yields 'aa', 'ab', 'ac', ..., 'zz'
     group_id_iter = itertools.starmap(
