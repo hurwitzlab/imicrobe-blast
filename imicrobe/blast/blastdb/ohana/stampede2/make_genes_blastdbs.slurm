@@ -18,7 +18,7 @@ module load launcher/3.2
 IMG=$WORK/jklynch/project/imicrobe/apps/imicrobe-blast/singularity/imicrobe-blast-0.0.5.img
 OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT
 
-export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24
+export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24/genes
 export FILE_GROUPS=24
 
 # no need to change these
