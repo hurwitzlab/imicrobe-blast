@@ -5,12 +5,10 @@
 #SBATCH -n 1
 #SBATCH -t 01:00:00
 #SBATCH -p skx-normal
-#SBATCH -J pack-ohana-files
+#SBATCH -J pack-files-ohana-genes
 #SBATCH --mail-type BEGIN,END,FAIL
 #SBATCH --mail-user jklynch@email.arizona.edu
 
-
-# this script is usually run from an interactive session rather than being sbatch'd
 
 module load tacc-singularity
 
@@ -21,6 +19,6 @@ export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast
 
 singularity exec $IMG pack_file_paths \
     --split-count 24 \
-    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_seq_db.sqlite \
-    --prefix ohana- \
+    --db-uri sqlite:///${BLAST_DB_OUTPUT}/ohana_genes_seq_db.sqlite \
+    --prefix ohana-genes- \
     --max-workers 48
