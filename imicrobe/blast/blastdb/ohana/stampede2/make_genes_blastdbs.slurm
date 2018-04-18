@@ -19,6 +19,7 @@ IMG=$WORK/jklynch/project/imicrobe/apps/imicrobe-blast/singularity/imicrobe-blas
 OHANA_HOT_DATA=/work/05066/imicrobe/iplantc.org/data/ohana/HOT
 
 export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24
+export FILE_GROUPS=24
 
 # no need to change these
 export LAUNCHER_PLUGIN_DIR=$LAUNCHER_DIR/plugins
