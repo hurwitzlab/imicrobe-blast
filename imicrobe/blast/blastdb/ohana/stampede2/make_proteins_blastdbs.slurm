@@ -3,7 +3,7 @@
 #SBATCH -A iPlant-Collabs
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -t 12:00:00
+#SBATCH -t 00:10:00
 #SBATCH -p skx-normal
 #SBATCH -J make-ohana-proteins-blast-db
 #SBATCH --mail-type BEGIN,END,FAIL
