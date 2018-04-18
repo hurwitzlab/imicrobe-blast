@@ -41,6 +41,15 @@ class FastaFile(Base):
     file_path = Column(String, unique=True)
 
 
+class BadFastaFile(Base):
+    __tablename__ = 'bad_fasta_file'
+
+    id = Column(Integer, primary_key=True)
+
+    file_path = Column(String, unique=True)
+    exception_message = Column(String)
+
+
 class FastaSequence(Base):
     __tablename__ = 'sequence'
     __table_args__ = (ForeignKeyConstraint(('fasta_file_id',), ('fasta_file.id', )), )
@@ -108,8 +117,8 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
 
     #quit()
 
-    good = []
-    bad = []
+    #good = []
+    #bad = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         """Build a dict of future -> FASTA file path
         {
@@ -134,28 +143,31 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
                     print('{:8.2f}s to insert {} sequences from "{}"'.format(time.time()-t0, len(seq_id_to_seq_length), fasta_fp))
 
             except FastaParseException as exc:
-                bad.append((fasta_fp, exc))
+                with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+                    bad_fasta_file = BadFastaFile(file_path=fasta_fp, exception_message=str(exc))
+                    db_session.add(bad_fasta_file)
+                    #bad.append((fasta_fp, exc))
             else:
                 print('{:8.2f}s to parse "{}"'.format(t, fasta_fp))
-                good.append((fasta_fp, seq_id_to_seq_length, t))
+                #good.append((fasta_fp, seq_id_to_seq_length, t))
 
-    sorted_good = sorted([fasta_fp for fasta_fp, *_ in good])
-    print('\n{} valid FASTA file(s)'.format(len(sorted_good)))
-    with open(valid_files_fp, 'wt') as valid_file:
-        valid_file.write('\n'.join(sorted_good))
-        valid_file.write('\n')
+    with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+        sorted_good = [fasta_file.file_path for fasta_file in db_session.query(FastaFile).order_by(FastaFile.file_path).all()]
+        print('\n{} valid FASTA file(s)'.format(len(sorted_good)))
+        with open(valid_files_fp, 'wt') as valid_file:
+            valid_file.write('\n'.join(sorted_good))
+            valid_file.write('\n')
 
-    sorted_bad = sorted(bad)
-    print('{} invalid FASTA file(s)'.format(len(sorted_bad)))
-    with open(invalid_files_fp, 'wt') as invalid_file:
-        for fp, exc in sorted_bad:
-            #invalid_file.write('\n'.join(sorted_bad))
-            invalid_file.write(fp)
-            invalid_file.write('\n')
-            sys.stdout.write(fp)
-            sys.stdout.write('\n')
-            sys.stdout.write(str(exc))
-            sys.stdout.write('\n')
+        sorted_bad = db_session.query(BadFastaFile).order_by(BadFastaFile.file_path).all()
+        print('{} invalid FASTA file(s)'.format(len(sorted_bad)))
+        with open(invalid_files_fp, 'wt') as invalid_file:
+            for bad_fasta_file in sorted_bad:
+                invalid_file.write(bad_fasta_file.file_path)
+                invalid_file.write('\n')
+                sys.stdout.write(bad_fasta_file.file_path)
+                sys.stdout.write('\n')
+                sys.stdout.write(bad_fasta_file.exception_message)
+                sys.stdout.write('\n')
 
     # what is in the db?
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
