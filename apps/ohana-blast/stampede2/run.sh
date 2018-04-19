@@ -21,7 +21,7 @@ QUERY=""
 PCT_ID=".98"
 OUT_DIR="$PWD/ohana-blast-out"
 IMG="imicrobe-blast-0.0.5.img"
-BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/blast/db24/genes"
+BLAST_DB_DIR="/work/05066/imicrobe/iplantc.org/data/ohana/blast/db24/genes"
 # this is a BLAST environment variable
 export BLASTDB=$BLAST_DB_DIR
 
