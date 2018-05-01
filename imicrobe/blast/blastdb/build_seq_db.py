@@ -12,10 +12,17 @@ Build a sqlite3 database of
 This means parsing every FASTA file. Do that concurrently with 48 processes on Stampede2.
 
 In addition this script writes a file of invalid FASTA files and a list of valid FASTA files.
+
+
+test usage:
+(imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ build_seq_db -i "test/**/*.fa" -d sqlite:///test_seq_db.sqlite --invalid-files-fp test/bad_files.txt --valid-files-fp test/good_files.txt
+
 """
 import argparse
 import concurrent.futures
 import glob
+import gzip
+import json
 import os
 import sys
 import time
@@ -93,6 +100,18 @@ def main():
 
 
 def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_workers):
+    """
+    This method resulted in 'queue full' errors when run on all iMicrobe samples.
+
+    Tried compressing the output of parse_fasta.
+
+    :param fasta_globs:
+    :param db_uri:
+    :param invalid_files_fp:
+    :param valid_files_fp:
+    :param max_workers:
+    :return:
+    """
     fasta_list = []
     for fasta_glob in fasta_globs.split(','):
         glob_results = glob.glob(fasta_glob, recursive=True)
@@ -127,11 +146,12 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
             ...
         }
         """
-        future_to_fasta_fp = {executor.submit(parse_fasta, fasta_fp): fasta_fp for fasta_fp in fasta_fp_not_in_db}
+        future_to_fasta_fp = {executor.submit(compress_parse_fasta, fasta_fp): fasta_fp for fasta_fp in fasta_fp_not_in_db}
         for future in concurrent.futures.as_completed(future_to_fasta_fp):
             fasta_fp = future_to_fasta_fp[future]
             try:
-                seq_id_to_seq_length, t = future.result()
+                compressed_json_seq_id_to_seq_length, t = future.result()
+                seq_id_to_seq_length = json.loads(gzip.decompress(compressed_json_seq_id_to_seq_length))
                 with session_manager_from_db_uri(db_uri=db_uri) as db_session:
                     t0 = time.time()
                     fasta_file = FastaFile(file_path=fasta_fp)
@@ -215,6 +235,16 @@ def parse_fasta(fasta_fp):
     return seq_id_to_seq_length, t
 
 
+def compress_parse_fasta(fasta_fp):
+    """
+    :param fasta_fp:
+    :return: bytes, float
+    """
+    seq_id_to_seq_length, t = parse_fasta(fasta_fp=fasta_fp)
+
+    return gzip.compress(json.dumps(seq_id_to_seq_length).encode(encoding='utf-8')), t
+
+
 def get_sequence_weights(db_uri):
     """
     Return a dictionary of file path to sequence read lengths:
@@ -246,6 +276,11 @@ def query_sequence_weights(db_uri, fasta_file_id):
 
 
 def get_sequence_weights_speedy(db_uri, max_workers):
+    """
+    :param db_uri:
+    :param max_workers:
+    :return:
+    """
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         with session_manager_from_db_uri(db_uri=db_uri) as db_session:
             """Build a dict of future -> FASTA file path
