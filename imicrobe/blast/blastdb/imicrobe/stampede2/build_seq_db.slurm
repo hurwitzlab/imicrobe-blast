@@ -3,7 +3,7 @@
 #SBATCH -A iPlant-Collabs
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -t 24:00:00
+#SBATCH -t 06:00:00
 #SBATCH -p skx-normal
 #SBATCH -J make-imicrobe-seq-db
 #SBATCH --mail-type BEGIN,END,FAIL
