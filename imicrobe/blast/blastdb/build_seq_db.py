@@ -146,7 +146,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
             ...
         }
         """
-        future_to_fasta_fp = {executor.submit(compress_parse_fasta, fasta_fp): fasta_fp for fasta_fp in fasta_fp_not_in_db}
+        future_to_fasta_fp = {executor.submit(delay_compress_parse_fasta, fasta_fp): fasta_fp for fasta_fp in fasta_fp_not_in_db}
         for future in concurrent.futures.as_completed(future_to_fasta_fp):
             fasta_fp = future_to_fasta_fp[future]
             try:
@@ -235,12 +235,20 @@ def parse_fasta(fasta_fp):
     return seq_id_to_seq_length, t
 
 
-def compress_parse_fasta(fasta_fp):
+def delay_compress_parse_fasta(fasta_fp):
     """
+    Try to solve the MemoryError caused by too many worker results piling up in the queue.
+
+    First compress the results. This helped a little.
+
+    Second add a delay.
+
     :param fasta_fp:
-    :return: bytes, float
+    :return:
     """
     seq_id_to_seq_length, t = parse_fasta(fasta_fp=fasta_fp)
+
+    time.sleep(60.0)
 
     return gzip.compress(json.dumps(seq_id_to_seq_length).encode(encoding='utf-8')), t
 
