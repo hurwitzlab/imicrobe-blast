@@ -15,7 +15,7 @@ In addition this script writes a file of invalid FASTA files and a list of valid
 
 
 test usage:
-(imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ build_seq_db -i "test/**/*.fa" -d sqlite:///test_seq_db.sqlite --invalid-files-fp test/bad_files.txt --valid-files-fp test/good_files.txt
+(imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ build_seq_db -i "test/**/*.fa" -d sqlite:///test_seq_db.sqlite --invalid-files-fp test/bad_files.txt --valid-files-fp test/good_files. --worker-delay 0
 
 """
 import argparse
@@ -88,6 +88,8 @@ def get_args(argv):
                             help='path to output file of valid FASTA files')
     arg_parser.add_argument('--max-workers', type=int, default=1,
                             help='number of processes')
+    arg_parser.add_argument('--worker-delay', type=int, default=60,
+                            help='delay each worker by this many seconds')
 
     args = arg_parser.parse_args(argv)
     print('command line arguments:\n\t{}'.format(args))
@@ -99,7 +101,7 @@ def main():
     build_seq_db(**vars(get_args(sys.argv[1:])))
 
 
-def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_workers):
+def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_workers, worker_delay):
     """
     This method resulted in 'queue full' errors when run on all iMicrobe samples.
 
@@ -110,6 +112,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     :param invalid_files_fp:
     :param valid_files_fp:
     :param max_workers:
+    :param worker_delay
     :return:
     """
     fasta_list = []
@@ -127,17 +130,15 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     # so we will not load them again
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
         fasta_fp_in_db = {fasta_file.file_path for fasta_file in db_session.query(FastaFile).all()}
+        bad_fasta_fp_in_db = {bad_fasta_file.file_path for bad_fasta_file in db_session.query(BadFastaFile).all()}
         all_fasta_fp = set(fasta_list)
-        fasta_fp_not_in_db = sorted(list(all_fasta_fp.difference(fasta_fp_in_db)))
+        all_fasta_fp_in_db = fasta_fp_in_db.union(bad_fasta_fp_in_db)
+        fasta_fp_not_in_db = sorted(list(all_fasta_fp.difference(all_fasta_fp_in_db)))
 
     print('{} FASTA files found'.format(len(fasta_list)))
-    print('{} FASTA file paths in database'.format(len(fasta_fp_in_db)))
+    print('{} FASTA file paths in database'.format(len(all_fasta_fp_in_db)))
     print('{} FASTA file paths not in database'.format(len(fasta_fp_not_in_db)))
 
-    #quit()
-
-    #good = []
-    #bad = []
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         """Build a dict of future -> FASTA file path
         {
@@ -146,7 +147,11 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
             ...
         }
         """
-        future_to_fasta_fp = {executor.submit(delay_compress_parse_fasta, fasta_fp): fasta_fp for fasta_fp in fasta_fp_not_in_db}
+        future_to_fasta_fp = {
+            executor.submit(delay_compress_parse_fasta, fasta_fp, worker_delay): fasta_fp
+            for fasta_fp
+            in fasta_fp_not_in_db}
+
         for future in concurrent.futures.as_completed(future_to_fasta_fp):
             fasta_fp = future_to_fasta_fp[future]
             try:
@@ -172,7 +177,10 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
                 #good.append((fasta_fp, seq_id_to_seq_length, t))
 
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
-        sorted_good = [fasta_file.file_path for fasta_file in db_session.query(FastaFile).order_by(FastaFile.file_path).all()]
+        sorted_good = [
+            fasta_file.file_path
+            for fasta_file
+            in db_session.query(FastaFile).order_by(FastaFile.file_path).all()]
         print('\n{} valid FASTA file(s)'.format(len(sorted_good)))
         with open(valid_files_fp, 'wt') as valid_file:
             valid_file.write('\n'.join(sorted_good))
@@ -235,7 +243,7 @@ def parse_fasta(fasta_fp):
     return seq_id_to_seq_length, t
 
 
-def delay_compress_parse_fasta(fasta_fp):
+def delay_compress_parse_fasta(fasta_fp, worker_delay):
     """
     Try to solve the MemoryError caused by too many worker results piling up in the queue.
 
@@ -244,11 +252,12 @@ def delay_compress_parse_fasta(fasta_fp):
     Second add a delay.
 
     :param fasta_fp:
+    :param worker_delay:
     :return:
     """
     seq_id_to_seq_length, t = parse_fasta(fasta_fp=fasta_fp)
 
-    time.sleep(60.0)
+    time.sleep(worker_delay)
 
     return gzip.compress(json.dumps(seq_id_to_seq_length).encode(encoding='utf-8')), t
 
