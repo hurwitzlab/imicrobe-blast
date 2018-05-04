@@ -88,8 +88,8 @@ def get_args(argv):
                             help='path to output file of valid FASTA files')
     arg_parser.add_argument('--max-workers', type=int, default=1,
                             help='number of processes')
-    arg_parser.add_argument('--worker-delay', type=int, default=60,
-                            help='delay each worker by this many seconds')
+    arg_parser.add_argument('--work-dp', default='work',
+                            help='directory to write files')
 
     args = arg_parser.parse_args(argv)
     print('command line arguments:\n\t{}'.format(args))
@@ -101,7 +101,7 @@ def main():
     build_seq_db(**vars(get_args(sys.argv[1:])))
 
 
-def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_workers, worker_delay):
+def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_workers, work_dp):
     """
     This method resulted in 'queue full' errors when run on all iMicrobe samples.
 
@@ -112,7 +112,6 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     :param invalid_files_fp:
     :param valid_files_fp:
     :param max_workers:
-    :param worker_delay
     :return:
     """
     fasta_list = []
@@ -139,6 +138,8 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     print('{} FASTA file paths in database'.format(len(all_fasta_fp_in_db)))
     print('{} FASTA file paths not in database'.format(len(fasta_fp_not_in_db)))
 
+    os.makedirs(work_dp, exist_ok=True)
+
     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
         """Build a dict of future -> FASTA file path
         {
@@ -148,16 +149,19 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
         }
         """
         future_to_fasta_fp = {
-            executor.submit(delay_compress_parse_fasta, fasta_fp, worker_delay): fasta_fp
+            executor.submit(write_parse_fasta, fasta_fp, work_dp): fasta_fp
             for fasta_fp
             in fasta_fp_not_in_db}
 
         for future in concurrent.futures.as_completed(future_to_fasta_fp):
             fasta_fp = future_to_fasta_fp[future]
             try:
-                compressed_json_seq_id_to_seq_length, t = future.result()
-                seq_id_to_seq_length = json.loads(gzip.decompress(compressed_json_seq_id_to_seq_length))
-                with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+                json_seq_id_to_seq_length_fp, t = future.result()
+                with open(json_seq_id_to_seq_length_fp, 'rt') as f,\
+                        session_manager_from_db_uri(db_uri=db_uri) as db_session:
+
+                    seq_id_to_seq_length = json.load(f)
+
                     t0 = time.time()
                     fasta_file = FastaFile(file_path=fasta_fp)
                     db_session.add(fasta_file)
@@ -174,6 +178,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
                     #bad.append((fasta_fp, exc))
             else:
                 print('{:8.2f}s to parse "{}"'.format(t, fasta_fp))
+                os.remove(json_seq_id_to_seq_length_fp)
                 #good.append((fasta_fp, seq_id_to_seq_length, t))
 
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
@@ -243,13 +248,11 @@ def parse_fasta(fasta_fp):
     return seq_id_to_seq_length, t
 
 
-def delay_compress_parse_fasta(fasta_fp, worker_delay):
+def write_parse_fasta(fasta_fp, work_dp):
     """
     Try to solve the MemoryError caused by too many worker results piling up in the queue.
 
     First compress the results. This helped a little.
-
-    Second add a delay.
 
     :param fasta_fp:
     :param worker_delay:
@@ -257,9 +260,11 @@ def delay_compress_parse_fasta(fasta_fp, worker_delay):
     """
     seq_id_to_seq_length, t = parse_fasta(fasta_fp=fasta_fp)
 
-    time.sleep(worker_delay)
+    json_fp = os.path.join(work_dp, os.path.basename(fasta_fp) + '.json')
+    with open(json_fp, 'wt') as f:
+        json.dump(seq_id_to_seq_length, f)
 
-    return gzip.compress(json.dumps(seq_id_to_seq_length).encode(encoding='utf-8')), t
+    return json_fp, t
 
 
 def get_sequence_weights(db_uri):
