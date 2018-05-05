@@ -15,13 +15,12 @@ In addition this script writes a file of invalid FASTA files and a list of valid
 
 
 test usage:
-(imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ build_seq_db -i "test/**/*.fa" -d sqlite:///test_seq_db.sqlite --invalid-files-fp test/bad_files.txt --valid-files-fp test/good_files. --worker-delay 0
+(imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ build_seq_db -i "test/**/*.fa" -d sqlite:///test_seq_db.sqlite --invalid-files-fp test/bad_files.txt --valid-files-fp test/good_files. --work-dp test/work
 
 """
 import argparse
 import concurrent.futures
 import glob
-import gzip
 import json
 import os
 import sys
@@ -169,6 +168,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
                         fasta_seq = FastaSequence(seq_id=seq_id, seq_length=seq_length)
                         fasta_seq.fasta_file = fasta_file
                         db_session.add(fasta_seq)
+                        db_session.flush()
                     print('{:8.2f}s to insert {} sequences from "{}"'.format(time.time()-t0, len(seq_id_to_seq_length), fasta_fp))
 
             except FastaParseException as exc:
