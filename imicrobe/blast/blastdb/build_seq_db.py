@@ -154,6 +154,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
 
         for future in concurrent.futures.as_completed(future_to_fasta_fp):
             fasta_fp = future_to_fasta_fp[future]
+            print('inserting sequence ids and lengths from {}'.format((fasta_fp)))
             try:
                 json_seq_id_to_seq_length_fp, t = future.result()
                 with open(json_seq_id_to_seq_length_fp, 'rt') as f,\
