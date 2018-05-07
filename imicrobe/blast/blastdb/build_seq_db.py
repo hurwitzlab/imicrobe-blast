@@ -265,11 +265,24 @@ def write_parse_fasta(fasta_fp, work_dp):
     :param worker_delay:
     :return:
     """
-    seq_id_to_seq_length, t = parse_fasta(fasta_fp=fasta_fp)
 
     json_fp = os.path.join(work_dp, os.path.basename(fasta_fp) + '.json')
-    with open(json_fp, 'wt') as f:
-        json.dump(seq_id_to_seq_length, f)
+    if os.path.exists(json_fp):
+        try:
+            json.load(fp=json_fp)
+            # fasta_fp has already been parsed
+            print('file {} has already been parsed'.format(fasta_fp))
+        except json.JSONDecodeError:
+            # parsing did not finish
+            print('rewriting file {}'.format(json_fp))
+            seq_id_to_seq_length, t = parse_fasta(fasta_fp=fasta_fp)
+            with open(json_fp, 'wt') as f:
+                json.dump(seq_id_to_seq_length, f)
+    else:
+        print('parsing file {}'.format(fasta_fp))
+        seq_id_to_seq_length, t = parse_fasta(fasta_fp=fasta_fp)
+        with open(json_fp, 'wt') as f:
+            json.dump(seq_id_to_seq_length, f)
 
     return json_fp, t
 
