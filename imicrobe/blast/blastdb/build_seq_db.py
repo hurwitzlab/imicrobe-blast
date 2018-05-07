@@ -269,6 +269,7 @@ def write_parse_fasta(fasta_fp, work_dp):
     json_fp = os.path.join(work_dp, os.path.basename(fasta_fp) + '.json')
     if os.path.exists(json_fp):
         try:
+            t = 0
             with open(json_fp, 'rt') as fp:
                 json.load(fp=fp)
             # fasta_fp has already been parsed
