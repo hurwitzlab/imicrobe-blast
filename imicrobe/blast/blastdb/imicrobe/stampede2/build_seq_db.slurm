@@ -28,5 +28,4 @@ singularity exec $IMG build_seq_db \
     --db-uri sqlite:///${BLAST_DB_OUTPUT}/imicrobe_seq_db.sqlite \
     --valid-files-fp imicrobe_valid_fasta_files.txt \
     --invalid-files-fp imicrobe_invalid_fasta_files.txt \
-    --max-workers 24 \
-    --file-limit 100
+    --max-workers 48
