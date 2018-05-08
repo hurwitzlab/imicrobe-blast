@@ -15,12 +15,19 @@ In addition this script writes a file of invalid FASTA files and a list of valid
 
 
 test usage:
-(imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ build_seq_db -i "test/**/*.fa" -d sqlite:///test_seq_db.sqlite --invalid-files-fp test/bad_files.txt --valid-files-fp test/good_files. --work-dp test/work
+(imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ build_seq_db \
+    -i "test/**/*.fa" \
+    -d sqlite:///test_seq_db.sqlite \
+    --invalid-files-fp test/bad_files.txt \
+    --valid-files-fp test/good_files. \
+    --work-dp test/work \
+    --file-limit 1
 
 """
 import argparse
 import concurrent.futures
 import glob
+import itertools
 import json
 import os
 import sys
@@ -29,7 +36,9 @@ import time
 from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 
-from sqlalchemy import Column, Integer, String, ForeignKeyConstraint, UniqueConstraint, create_engine
+import numpy as np
+
+from sqlalchemy import Column, Float, Integer, String, ForeignKeyConstraint, UniqueConstraint, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -45,6 +54,10 @@ class FastaFile(Base):
     id = Column(Integer, primary_key=True)
 
     file_path = Column(String, unique=True)
+
+    seq_length_sum = Column(Float)
+    seq_length_log_sum = Column(Float)
+    seq_length_sq_sum = Column(Float)
 
 
 class BadFastaFile(Base):
@@ -89,6 +102,8 @@ def get_args(argv):
                             help='number of processes')
     arg_parser.add_argument('--work-dp', default='work',
                             help='directory to write files')
+    arg_parser.add_argument('--file-limit', type=int, required=False, default=None,
+                            help='stop after <file-limit> files have been processed')
 
     args = arg_parser.parse_args(argv)
     print('command line arguments:\n\t{}'.format(args))
@@ -100,7 +115,7 @@ def main():
     build_seq_db(**vars(get_args(sys.argv[1:])))
 
 
-def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_workers, work_dp):
+def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_workers, work_dp, file_limit):
     """
     This method resulted in 'queue full' errors when run on all iMicrobe samples.
 
@@ -148,34 +163,37 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
         }
         """
         future_to_fasta_fp = {
-            executor.submit(write_parse_fasta, fasta_fp, work_dp): fasta_fp
+            executor.submit(parse_fasta, fasta_fp): fasta_fp
             for fasta_fp
-            in fasta_fp_not_in_db}
+            in itertools.islice(fasta_fp_not_in_db, file_limit)}
 
         for future in concurrent.futures.as_completed(future_to_fasta_fp):
             fasta_fp = future_to_fasta_fp[future]
             print('inserting sequence ids and lengths from {}'.format((fasta_fp)))
             try:
-                json_seq_id_to_seq_length_fp, t = future.result()
-                with open(json_seq_id_to_seq_length_fp, 'rt') as f,\
-                        session_manager_from_db_uri(db_uri=db_uri) as db_session:
+                seq_length_sum, seq_length_log_sum, seq_length_sq_sum, t = future.result()
+                #with open(json_seq_id_to_seq_length_fp, 'rt') as f,\
+                with session_manager_from_db_uri(db_uri=db_uri) as db_session:
 
-                    seq_id_to_seq_length = json.load(f)
+                    #seq_id_to_seq_length = json.load(f)
 
                     t0 = time.time()
-                    fasta_file = FastaFile(file_path=fasta_fp)
+                    fasta_file = FastaFile(
+                        file_path=fasta_fp,
+                        seq_length_sum=seq_length_sum,
+                        seq_length_log_sum=seq_length_log_sum,
+                        seq_length_sq_sum=seq_length_sq_sum)
                     db_session.add(fasta_file)
-                    for n, (seq_id, seq_length) in enumerate(seq_id_to_seq_length.items()):
-                        fasta_seq = FastaSequence(seq_id=seq_id, seq_length=seq_length)
-                        fasta_seq.fasta_file = fasta_file
-                        db_session.add(fasta_seq)
+                    #for n, (seq_id, seq_length) in enumerate(seq_id_to_seq_length.items()):
+                    #    fasta_seq = FastaSequence(seq_id=seq_id, seq_length=seq_length)
+                    #    fasta_seq.fasta_file = fasta_file
+                    #    db_session.add(fasta_seq)
 
-                        if (n + 1) % 1000 == 0:
-                            db_session.flush()
-                    db_session.flush()
-                    print('{:8.2f}s to insert {} sequences from "{}"'.format(
+                    #    if (n + 1) % 1000 == 0:
+                    #        db_session.flush()
+                    #db_session.flush()
+                    print('{:8.2f}s to insert sequence totals from "{}"'.format(
                         time.time()-t0,
-                        len(seq_id_to_seq_length),
                         fasta_fp))
 
             except FastaParseException as exc:
@@ -183,10 +201,10 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
                     bad_fasta_file = BadFastaFile(file_path=fasta_fp, exception_message=str(exc))
                     db_session.add(bad_fasta_file)
                     #bad.append((fasta_fp, exc))
-            else:
-                print('{:8.2f}s to parse "{}"'.format(t, fasta_fp))
-                os.remove(json_seq_id_to_seq_length_fp)
-                #good.append((fasta_fp, seq_id_to_seq_length, t))
+            #else:
+            #    print('{:8.2f}s to parse "{}"'.format(t, fasta_fp))
+            #    os.remove(json_seq_id_to_seq_length_fp)
+            #    #good.append((fasta_fp, seq_id_to_seq_length, t))
 
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
         sorted_good = [
@@ -213,9 +231,12 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
         file_count = db_session.query(FastaFile).count()
         print('inserted {} FASTA file(s)'.format(file_count))
-        #for f in db_session.query(FastaFile).all():
-        #    print('FASTA file id: {}'.format(f.id))
-        #    print('FASTA file path: {}'.format(f.file_path))
+        for f in db_session.query(FastaFile).all():
+            print('FASTA file id: {}'.format(f.id))
+            print('  file path: {}'.format(f.file_path))
+            print('  sequence length sum: {:5.2f}'.format(f.seq_length_sum))
+            print('  sequence length log sum: {:5.2f}'.format(f.seq_length_log_sum))
+            print('  sequence length squared sum: {:5.2f}'.format(f.seq_length_sq_sum))
 
         sequence_count = db_session.query(FastaSequence).count()
         print('inserted {} sequence(s)'.format(sequence_count))
@@ -228,6 +249,11 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
 
 def parse_fasta(fasta_fp):
     t0 = time.time()
+
+    seq_length_sum = 0.0
+    seq_length_log_sum = 0.0
+    seq_length_sq_sum = 0.0
+
     alphabet_dna = set(IUPAC.ambiguous_dna.letters)
     alphabet_protein = set(IUPAC.extended_protein.letters)
     # Ohana protein sequences often end in '*'
@@ -242,7 +268,12 @@ def parse_fasta(fasta_fp):
         else:
             # all letters in record.seq must be in alphabet(s), but not all letters in alphabet(s) must in record.seq
             if len(seq_letters.difference(alphabet_dna)) == 0 or len(seq_letters.difference(alphabet_protein)) == 0:
-                seq_id_to_seq_length[record.id] = len(record.seq)
+                n = len(record.seq)
+
+                seq_id_to_seq_length[record.id] = n
+                seq_length_sum += n
+                seq_length_log_sum += n * np.log(n)
+                seq_length_sq_sum += n ** 2
             else:
                 msg = '{}: Failed to parse sequence {}\nid: {}\nsequence: {}'.format(fasta_fp, r+1, record.id, record.seq[:1000])
                 raise FastaParseException(msg)
@@ -252,7 +283,7 @@ def parse_fasta(fasta_fp):
         raise FastaParseException(msg)
 
     t = time.time() - t0
-    return seq_id_to_seq_length, t
+    return seq_length_sum, seq_length_log_sum, seq_length_sq_sum, t
 
 
 def write_parse_fasta(fasta_fp, work_dp):

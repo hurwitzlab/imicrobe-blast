@@ -3,7 +3,7 @@
 #SBATCH -A iPlant-Collabs
 #SBATCH -N 1
 #SBATCH -n 1
-#SBATCH -t 02:00:00
+#SBATCH -t 04:00:00
 #SBATCH -p skx-normal
 #SBATCH -J make-imicrobe-seq-db
 #SBATCH --mail-type BEGIN,END,FAIL
@@ -28,4 +28,5 @@ singularity exec $IMG build_seq_db \
     --db-uri sqlite:///${BLAST_DB_OUTPUT}/imicrobe_seq_db.sqlite \
     --valid-files-fp imicrobe_valid_fasta_files.txt \
     --invalid-files-fp imicrobe_invalid_fasta_files.txt \
-    --max-workers 24
+    --max-workers 24 \
+    --file-limit 100
