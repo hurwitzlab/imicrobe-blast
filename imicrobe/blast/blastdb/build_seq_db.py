@@ -234,9 +234,9 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
         for f in db_session.query(FastaFile).all():
             print('FASTA file id: {}'.format(f.id))
             print('  file path: {}'.format(f.file_path))
-            print('  sequence length sum: {:5.2f}'.format(f.seq_length_sum))
-            print('  sequence length log sum: {:5.2f}'.format(f.seq_length_log_sum))
-            print('  sequence length squared sum: {:5.2f}'.format(f.seq_length_sq_sum))
+            print('  sequence length sum         : {:5.2f}'.format(f.seq_length_sum))
+            print('  sequence length log sum     : {:5.2f}'.format(f.seq_length_log_sum))
+            print('  sequence length squared sum : {:5.2f}'.format(f.seq_length_sq_sum))
 
         sequence_count = db_session.query(FastaSequence).count()
         print('inserted {} sequence(s)'.format(sequence_count))
