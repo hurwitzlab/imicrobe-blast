@@ -13,8 +13,8 @@
 module load blast
 module load tacc-singularity
 
-module use /scratch/01255/siliu/modulefiles
-module load launcher/3.2
+#module use /scratch/01255/siliu/modulefiles
+#module load launcher/3.2
 
 IMG=../../../../../singularity/imicrobe-blast-0.0.5.img
 IMICROBE_PROJECTS=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects
@@ -39,18 +39,39 @@ find ${IMICROBE_PROJECTS} \
 #
 
 # no need to change these
-export LAUNCHER_PLUGIN_DIR=$LAUNCHER_DIR/plugins
-export LAUNCHER_RMI=SLURM
-
+#export LAUNCHER_PLUGIN_DIR=$LAUNCHER_DIR/plugins
+#export LAUNCHER_RMI=SLURM
+#
 # must define LAUNCHER_WORKDIR somewhere
-export LAUNCHER_WORKDIR=`pwd`
-echo "LAUNCHER_WORKDIR: $LAUNCHER_WORKDIR"
-
+#export LAUNCHER_WORKDIR=`pwd`
+#echo "LAUNCHER_WORKDIR: $LAUNCHER_WORKDIR"
+#
 # by default LAUNCHER_PPN is 8 (?)
 # use LAUNCHER_PPN to control the number of jobs on each node
-export LAUNCHER_PPN=${FILE_GROUPS}
+#export LAUNCHER_PPN=${FILE_GROUPS}
+#
+#export LAUNCHER_SCHEDULER=dynamic
+#
+#export LAUNCHER_JOB_FILE=jobs${FILE_GROUPS}.launcher
+#$LAUNCHER_DIR/paramrun
 
-export LAUNCHER_SCHEDULER=dynamic
+# assume parallel is already on $PATH
+# define the env_parallel function (important!)
+. $(which env_parallel.bash)
 
-export LAUNCHER_JOB_FILE=jobs${FILE_GROUPS}.launcher
-$LAUNCHER_DIR/paramrun
+# nodelist
+scontrol show hostnames $SLURM_JOB_NODELIST > nodelist
+
+# $JOBFILE is the list of jobs
+JOBFILE=jobs24.launcher
+
+# PPN is processes per node
+PPN=24
+
+# env_parallel sends the shell environment to each process it starts
+
+env_parallel --max-procs ${PPN} --joblog paralleljobs.log  --sshloginfile nodelist --group < ${JOBFILE}
+
+echo " "
+echo "GNU Parallel Job Complete"
+echo " "
