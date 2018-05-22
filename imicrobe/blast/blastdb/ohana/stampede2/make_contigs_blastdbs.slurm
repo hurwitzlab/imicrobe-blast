@@ -36,7 +36,7 @@ PPN=24
 
 # env_parallel sends the shell environment to each process it starts
 
-env_parallel --max-procs ${PPN} --joblog paralleljobs.log  --sshloginfile nodelist --sshdelay 0.1 --group < ${JOBFILE}
+env_parallel --max-procs ${PPN} --joblog paralleljobs.log --workdir $(pwd) --sshloginfile nodelist --sshdelay 0.1 --group < ${JOBFILE}
 
 echo " "
 echo "GNU Parallel Job Complete"
