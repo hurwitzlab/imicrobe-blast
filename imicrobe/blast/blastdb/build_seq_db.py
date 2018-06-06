@@ -9,10 +9,15 @@ Build a sqlite3 database of
         sequence id
         sequence length
 
+That was too much. Instead build a sqlite3 database of
+    FASTA file name
+        sum of sequence lengths
+        sum of seq_length * log(seq_length)
+        sum of seq_length ** 2
+
 This means parsing every FASTA file. Do that concurrently with 48 processes on Stampede2.
 
 In addition this script writes a file of invalid FASTA files and a list of valid FASTA files.
-
 
 test usage:
 (imblst) jklynch@minty ~/host/project/imicrobe/apps/imicrobe-blast $ build_seq_db \
@@ -69,19 +74,19 @@ class BadFastaFile(Base):
     exception_message = Column(String)
 
 
-class FastaSequence(Base):
-    __tablename__ = 'sequence'
-    __table_args__ = (ForeignKeyConstraint(('fasta_file_id',), ('fasta_file.id', )), )
-
-    id = Column(Integer, primary_key=True)
-
-    seq_id = Column(String)
-    seq_length = Column(Integer)
-    fasta_file_id = Column(Integer)
-
-    fasta_file = relationship('FastaFile')
-
-    UniqueConstraint('seq_id', 'fasta_file_id', name='unique_sequence_within_file')
+# class FastaSequence(Base):
+#     __tablename__ = 'sequence'
+#     __table_args__ = (ForeignKeyConstraint(('fasta_file_id',), ('fasta_file.id', )), )
+#
+#     id = Column(Integer, primary_key=True)
+#
+#     seq_id = Column(String)
+#     seq_length = Column(Integer)
+#     fasta_file_id = Column(Integer)
+#
+#     fasta_file = relationship('FastaFile')
+#
+#     UniqueConstraint('seq_id', 'fasta_file_id', name='unique_sequence_within_file')
 
 
 class FastaParseException(BaseException):
@@ -140,7 +145,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
     Base.metadata.create_all(engine, checkfirst=True)
 
     # get a list of all FASTA files already in the database
-    # so we will not load them again
+    # so they will not be loaded again
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
         fasta_fp_in_db = {fasta_file.file_path for fasta_file in db_session.query(FastaFile).all()}
         bad_fasta_fp_in_db = {bad_fasta_file.file_path for bad_fasta_file in db_session.query(BadFastaFile).all()}
@@ -206,6 +211,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
             #    os.remove(json_seq_id_to_seq_length_fp)
             #    #good.append((fasta_fp, seq_id_to_seq_length, t))
 
+    # log the numbers of valid and invalid files
     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
         sorted_good = [
             fasta_file.file_path
@@ -238,8 +244,8 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
             print('  sequence length log sum     : {:5.2f}'.format(f.seq_length_log_sum))
             print('  sequence length squared sum : {:5.2f}'.format(f.seq_length_sq_sum))
 
-        sequence_count = db_session.query(FastaSequence).count()
-        print('inserted {} sequence(s)'.format(sequence_count))
+        #sequence_count = db_session.query(FastaSequence).count()
+        #print('inserted {} sequence(s)'.format(sequence_count))
         #for s in db_session.query(FastaSequence).all():
         #    print('  sequence id: {}'.format(s.id))
         #    print('  sequence FASTA id: {}'.format(s.seq_id))
@@ -320,62 +326,62 @@ def write_parse_fasta(fasta_fp, work_dp):
     return json_fp, t
 
 
-def get_sequence_weights(db_uri):
-    """
-    Return a dictionary of file path to sequence read lengths:
-      {
-        '/path/to/file1.fasta': (100, 200, 50, ...),
-        '/path/to/file2.fasta': (150, 250, 100, ...),
-        ...
-      }
-    """
-
-    print('reading files and read lengths from {}'.format(db_uri))
-    t0 = time.time()
-    with session_manager_from_db_uri(db_uri=db_uri) as db_session:
-        file_path_to_read_lengths = {
-            f.file_path: query_sequence_weights(db_uri=db_uri, fasta_file_id=f.id)
-            for f
-            in db_session.query(FastaFile).all()}
-    print('done in {:5.2f}s'.format(time.time()-t0))
-
-    return file_path_to_read_lengths
-
-
-def query_sequence_weights(db_uri, fasta_file_id):
-    with session_manager_from_db_uri(db_uri=db_uri) as db_session:
-        return tuple([
-            s.seq_length
-            for s
-            in db_session.query(FastaSequence).filter(FastaSequence.fasta_file_id == fasta_file_id).all()])
+# def get_sequence_weights(db_uri):
+#     """
+#     Return a dictionary of file path to sequence read lengths:
+#       {
+#         '/path/to/file1.fasta': (100, 200, 50, ...),
+#         '/path/to/file2.fasta': (150, 250, 100, ...),
+#         ...
+#       }
+#     """
+#
+#     print('reading files and read lengths from {}'.format(db_uri))
+#     t0 = time.time()
+#     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+#         file_path_to_read_lengths = {
+#             f.file_path: query_sequence_weights(db_uri=db_uri, fasta_file_id=f.id)
+#             for f
+#             in db_session.query(FastaFile).all()}
+#     print('done in {:5.2f}s'.format(time.time()-t0))
+#
+#     return file_path_to_read_lengths
 
 
-def get_sequence_weights_speedy(db_uri, max_workers):
-    """
-    :param db_uri:
-    :param max_workers:
-    :return:
-    """
-    with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-        with session_manager_from_db_uri(db_uri=db_uri) as db_session:
-            """Build a dict of future -> FASTA file path
-            {
-                future_1: '/work/05066/imicrobe/iplantc.org/data/ohana/HOT/HOT224_1_0025m/proteins.faa',
-                future_2: '/work/05066/imicrobe/iplantc.org/data/ohana/HOT/HOT224_1_0050m/proteins.faa',
-                ...
-            }
-            """
-            future_to_fasta_fp = {
-                    executor.submit(query_sequence_weights, db_uri, fasta_file.id): fasta_file.file_path
-                    for fasta_file
-                    in db_session.query(FastaFile).all()}
+# def query_sequence_weights(db_uri, fasta_file_id):
+#     with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+#         return tuple([
+#             s.seq_length
+#             for s
+#             in db_session.query(FastaSequence).filter(FastaSequence.fasta_file_id == fasta_file_id).all()])
 
-            file_path_to_read_lengths = {
-                future_to_fasta_fp[future]: future.result()
-                for future
-                in concurrent.futures.as_completed(future_to_fasta_fp)}
 
-    return file_path_to_read_lengths
+# def get_sequence_weights_speedy(db_uri, max_workers):
+#     """
+#     :param db_uri:
+#     :param max_workers:
+#     :return:
+#     """
+#     with concurrent.futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+#         with session_manager_from_db_uri(db_uri=db_uri) as db_session:
+#             """Build a dict of future -> FASTA file path
+#             {
+#                 future_1: '/work/05066/imicrobe/iplantc.org/data/ohana/HOT/HOT224_1_0025m/proteins.faa',
+#                 future_2: '/work/05066/imicrobe/iplantc.org/data/ohana/HOT/HOT224_1_0050m/proteins.faa',
+#                 ...
+#             }
+#             """
+#             future_to_fasta_fp = {
+#                     executor.submit(query_sequence_weights, db_uri, fasta_file.id): fasta_file.file_path
+#                     for fasta_file
+#                     in db_session.query(FastaFile).all()}
+#
+#             file_path_to_read_lengths = {
+#                 future_to_fasta_fp[future]: future.result()
+#                 for future
+#                 in concurrent.futures.as_completed(future_to_fasta_fp)}
+#
+#     return file_path_to_read_lengths
 
 
 if __name__ == '__main__':
