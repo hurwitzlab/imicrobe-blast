@@ -27,9 +27,10 @@ rm ${BLAST_DB_OUTPUT}/imicrobe_seq_db.sqlite
 rm imicrobe_valid_fasta_files.txt
 rm imicrobe_invalid_fasta_files.txt
 
+# running out of memory with 48 workers
 singularity exec $IMG build_seq_db \
     --fasta-globs ${IMICROBE_DATA}/**/*.fa,${IMICROBE_DATA}/**/*.fna,${IMICROBE_DATA}/**/*.fasta \
     --db-uri sqlite:///${BLAST_DB_OUTPUT}/imicrobe_seq_db.sqlite \
     --valid-files-fp imicrobe_valid_fasta_files.txt \
     --invalid-files-fp imicrobe_invalid_fasta_files.txt \
-    --max-workers 48
+    --max-workers 36
