@@ -71,7 +71,7 @@ setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
         'orminator',
-        'agave-api-test',
+        'agave-app-test',
         'biopython',
         'numpy',
         'sqlalchemy'
