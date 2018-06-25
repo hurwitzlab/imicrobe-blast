@@ -1,4 +1,4 @@
-git+https://github.com/hurwitzlab/orminator.git
-git+https://github.com/hurwitzlab/agave-api-test.git
+git+ssh://github.com/hurwitzlab/orminator.git
+git+ssh://github.com/hurwitzlab/agave-api-test.git
 
 -e .
