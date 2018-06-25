@@ -7,7 +7,7 @@
 #SBATCH -p skx-normal
 #SBATCH -J make-imicrobe-seq-db
 #SBATCH --mail-type BEGIN,END,FAIL
-#SBATCH --mail-user jklynch@email.arizona.edu
+#SBATCH --mail-user joshua.kevin.lynch@gmail.com
 
 #
 # This script is intended to be run more than once since it has been taking
@@ -22,6 +22,10 @@ IMG=$WORK/jklynch/project/imicrobe/apps/imicrobe-blast/singularity/imicrobe-blas
 IMICROBE_DATA=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects
 
 export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/imicrobe/blast
+
+rm ${BLAST_DB_OUTPUT}/imicrobe_seq_db.sqlite
+rm imicrobe_valid_fasta_files.txt
+rm imicrobe_invalid_fasta_files.txt
 
 singularity exec $IMG build_seq_db \
     --fasta-globs ${IMICROBE_DATA}/**/*.fa,${IMICROBE_DATA}/**/*.fna,${IMICROBE_DATA}/**/*.fasta \
