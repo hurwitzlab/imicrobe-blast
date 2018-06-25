@@ -74,6 +74,7 @@ setup(
         'agave-app-test',
         'biopython',
         'numpy',
+        'pytest',
         'sqlalchemy'
     ],
 
