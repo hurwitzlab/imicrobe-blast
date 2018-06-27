@@ -256,6 +256,7 @@ def build_seq_db(fasta_globs, db_uri, invalid_files_fp, valid_files_fp, max_work
 def parse_fasta(fasta_fp):
     t0 = time.time()
 
+    seq_count = 0
     seq_length_sum = 0.0
     seq_length_log_sum = 0.0
     seq_length_sq_sum = 0.0
@@ -264,7 +265,7 @@ def parse_fasta(fasta_fp):
     alphabet_protein = set(IUPAC.extended_protein.letters)
     # Ohana protein sequences often end in '*'
     alphabet_protein.add('*')
-    seq_id_to_seq_length = {}
+
     try:
         for r, record in enumerate(SeqIO.parse(fasta_fp, format='fasta', alphabet=IUPAC.ambiguous_dna)):
             seq_letters = set(str(record.seq).upper())
@@ -276,9 +277,9 @@ def parse_fasta(fasta_fp):
                 # all letters in record.seq must be in alphabet(s)
                 # but not all letters in alphabet(s) must in record.seq
                 if len(seq_letters.difference(alphabet_dna)) == 0 or len(seq_letters.difference(alphabet_protein)) == 0:
-                    n = len(record.seq)
+                    seq_count += 1
 
-                    seq_id_to_seq_length[record.id] = n
+                    n = len(record.seq)
                     seq_length_sum += n
                     seq_length_log_sum += n * np.log(n)
                     seq_length_sq_sum += n ** 2
@@ -292,7 +293,7 @@ def parse_fasta(fasta_fp):
         print(ude)
         raise FastaParseException(msg)
 
-    if len(seq_id_to_seq_length) == 0:
+    if seq_count == 0:
         msg = '{} is empty'.format(fasta_fp)
         raise FastaParseException(msg)
 
