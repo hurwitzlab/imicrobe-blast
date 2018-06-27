@@ -29,9 +29,11 @@ rm imicrobe_invalid_fasta_files.txt
 
 # running out of memory with 48 workers
 # running out of memory with 36 workers
+# running out of memory with 24 workers
+# remove the memory intensive code and go back to 48 workers
 singularity exec $IMG build_seq_db \
     --fasta-globs ${IMICROBE_DATA}/**/*.fa,${IMICROBE_DATA}/**/*.fna,${IMICROBE_DATA}/**/*.fasta \
     --db-uri sqlite:///${BLAST_DB_OUTPUT}/imicrobe_seq_db.sqlite \
     --valid-files-fp imicrobe_valid_fasta_files.txt \
     --invalid-files-fp imicrobe_invalid_fasta_files.txt \
-    --max-workers 24
+    --max-workers 48
