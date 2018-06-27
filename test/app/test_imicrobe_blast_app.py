@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from test import submit_job, wait_for_job_to_finish
+from agave_app_test import submit_job, wait_for_job_to_finish
 
 
 def test_imicrobe_blast_private(cyverse_oauth_session):
