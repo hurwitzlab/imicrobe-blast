@@ -1,5 +1,5 @@
 APP = imicrobe-blast
-SINGULARITY=singularity
+SINGULARITY = singularity
 SIZE = 1024
 VERSION = 0.0.5
 IMAGE_NAME = $(APP)-$(VERSION).img
@@ -23,5 +23,5 @@ iput:
 	iput -f ~/$(IMAGE_NAME)
 
 iget:
-	cd /work/05066/imicrobe/singularity/; iget -f $(IMAGE_NAME)
+	cd /work/05066/imicrobe/singularity/; iget -f $(IMAGE_NAME); chmod ag+r ${IMAGE_NAME}
 	irm $(IMAGE_NAME)
