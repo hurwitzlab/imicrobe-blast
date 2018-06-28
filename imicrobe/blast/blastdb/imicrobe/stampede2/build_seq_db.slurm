@@ -18,7 +18,7 @@
 
 module load tacc-singularity
 
-IMG=$WORK/jklynch/project/imicrobe/apps/imicrobe-blast/singularity/imicrobe-blast-0.0.5.img
+IMG=/work/05066/imicrobe/singularity/imicrobe-blast-0.0.5.img
 IMICROBE_DATA=/work/05066/imicrobe/iplantc.org/data/imicrobe/projects
 
 export BLAST_DB_OUTPUT=/work/05066/imicrobe/iplantc.org/data/imicrobe/blast
