@@ -23,5 +23,5 @@ iput:
 	iput -f ~/$(IMAGE_NAME)
 
 iget:
-	iget -f $(IMAGE_NAME)
+	cd /work/05066/imicrobe/singularity/; iget -f $(IMAGE_NAME)
 	irm $(IMAGE_NAME)
